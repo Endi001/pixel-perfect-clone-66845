@@ -11,10 +11,12 @@ export const stridemedia = {
     poster: "https://images.pexels.com/photos/3125907/pexels-photo.jpeg?auto=compress&cs=tinysrgb&w=1600",
   },
   rail: [
-    "https://videos.pexels.com/video-files/3191933/3191933-uhd_2560_1440_25fps.mp4",
-    "https://videos.pexels.com/video-files/3191899/3191899-uhd_2560_1440_25fps.mp4",
-    "https://videos.pexels.com/video-files/14458139/14458139-hd_1920_1080_24fps.mp4",
-    "https://videos.pexels.com/video-files/3264775/3264775-hd_1920_1080_24fps.mp4",
+    "https://videos.pexels.com/video-files/7671776/7671776-uhd_2732_1440_25fps.mp4#t=3",
+    "https://videos.pexels.com/video-files/7675448/7675448-uhd_2732_1440_25fps.mp4",
+    "https://videos.pexels.com/video-files/9629859/9629859-uhd_2732_1440_25fps.mp4",
+    "https://videos.pexels.com/video-files/8678058/8678058-uhd_2560_1440_25fps.mp4",
+    "https://videos.pexels.com/video-files/5275681/5275681-uhd_2732_1440_25fps.mp4",
+    "https://videos.pexels.com/video-files/5624211/5624211-uhd_2560_1440_24fps.mp4",
   ],
   boxing: {
     src: "https://videos.pexels.com/video-files/9777987/9777987-hd_1920_1080_25fps.mp4",
