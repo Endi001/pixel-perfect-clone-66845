@@ -3,29 +3,37 @@ import { stridemedia } from "@/lib/stride-media";
 
 type Stop = {
   label: string;
-  // Where to pan the image (transform-origin percentages) and scale
-  ox: number; oy: number; scale: number;
-  // Marker position as % of container
+  // Focus point as % of the image wrapper (also marker position)
   mx: number; my: number;
-  // Motion trail arc coords (relative to marker)
-  trail: { x1: number; y1: number; cx: number; cy: number; x2: number; y2: number };
+  // Scale at this stop
+  scale: number;
 };
 
+// Wide establishing shot then three anatomical focus points.
 const stops: Stop[] = [
-  { label: "GROUND CONTACT", ox: 55, oy: 88, scale: 1.9, mx: 55, my: 87,
-    trail: { x1: 8, y1: -30, cx: 30, cy: -60, x2: 60, y2: -20 } },
-  { label: "HIP EXTENSION", ox: 52, oy: 55, scale: 2.0, mx: 52, my: 60,
-    trail: { x1: -40, y1: 10, cx: -20, cy: -30, x2: 20, y2: -10 } },
-  { label: "SHOULDER DRIVE", ox: 48, oy: 30, scale: 1.85, mx: 48, my: 33,
-    trail: { x1: 30, y1: -10, cx: 0, cy: -40, x2: -50, y2: -20 } },
+  { label: "OVERVIEW",       mx: 50, my: 50, scale: 1.15 },
+  { label: "GROUND CONTACT", mx: 55, my: 87, scale: 2.2 },
+  { label: "HIP EXTENSION",  mx: 52, my: 60, scale: 2.4 },
+  { label: "SHOULDER DRIVE", mx: 48, my: 33, scale: 2.2 },
 ];
 
-// Scene 6 — Biomechanics / clinical fusion. Ken Burns pan/zoom + slate annotations.
+// Convert a focus point (% of wrapper) + scale to translate percentages so
+// the point lands at wrapper center. transform-origin is center center.
+function offsetFor(s: Stop) {
+  return {
+    xPercent: -(s.mx - 50) * s.scale,
+    yPercent: -(s.my - 50) * s.scale,
+    scale: s.scale,
+  };
+}
+
+// Scene 6 — Biomechanics / clinical fusion. One continuous ScrollTrigger
+// timeline chains all pan/zoom stops; markers live inside the transformed
+// image wrapper so they track the image exactly.
 export function Biomechanics() {
   const sectionRef = useRef<HTMLElement>(null);
-  const imgRef = useRef<HTMLImageElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const markerRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const labelRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -33,9 +41,7 @@ export function Biomechanics() {
     const isMobile = window.matchMedia?.("(max-width: 767px)").matches;
 
     if (prefersReduced || isMobile) {
-      // All annotations visible on scroll-into-view
       markerRefs.current.forEach((m) => m && (m.style.opacity = "1"));
-      labelRefs.current.forEach((l) => l && (l.style.opacity = "1"));
       return;
     }
 
@@ -50,26 +56,44 @@ export function Biomechanics() {
       const ScrollTrigger = stMod.ScrollTrigger;
       gsap.registerPlugin(ScrollTrigger);
 
+      // Prime the initial transform to match the first stop exactly so there's
+      // no jump when the timeline picks up.
+      const first = offsetFor(stops[0]);
+      gsap.set(wrapperRef.current, {
+        transformOrigin: "50% 50%",
+        xPercent: first.xPercent,
+        yPercent: first.yPercent,
+        scale: first.scale,
+      });
+
       const tl = gsap.timeline({
+        defaults: { ease: "none" },
         scrollTrigger: {
           trigger: sectionRef.current,
           start: "top top",
-          end: "+=200%",
+          end: "+=250%",
           pin: true,
           scrub: 0.8,
+          invalidateOnRefresh: true,
         },
       });
 
-      stops.forEach((s, i) => {
-        tl.to(imgRef.current, {
-          scale: s.scale,
-          transformOrigin: `${s.ox}% ${s.oy}%`,
-          ease: "none",
+      // Chain sequential .to() tweens — each picks up from the previous state.
+      for (let i = 1; i < stops.length; i++) {
+        const o = offsetFor(stops[i]);
+        tl.to(wrapperRef.current, {
+          xPercent: o.xPercent,
+          yPercent: o.yPercent,
+          scale: o.scale,
           duration: 1,
-        }, i);
-        tl.to(markerRefs.current[i], { opacity: 1, scale: 1, duration: 0.3 }, i + 0.4);
-        tl.to(labelRefs.current[i], { opacity: 1, x: 0, duration: 0.3 }, i + 0.5);
-      });
+        });
+        // Reveal this stop's marker just as we arrive.
+        tl.to(
+          markerRefs.current[i],
+          { opacity: 1, duration: 0.25 },
+          "<0.6",
+        );
+      }
 
       cleanup = () => { tl.scrollTrigger?.kill(); tl.kill(); };
     })();
@@ -84,63 +108,58 @@ export function Biomechanics() {
       className="stride-section-dark relative h-[100svh] overflow-hidden"
     >
       <div className="absolute inset-0 overflow-hidden">
-        <img
-          ref={imgRef}
-          src={stridemedia.biomechanics.src}
-          alt="Marathon runner mid-stride on a city street"
-          className="w-full h-full object-cover will-change-transform"
-          style={{ transformOrigin: "55% 88%", transform: "scale(1.9)" }}
-        />
-        <div className="absolute inset-0 bg-[color:var(--ink)]/35" />
+        {/* Transformed image wrapper — image + markers move together */}
+        <div
+          ref={wrapperRef}
+          className="absolute inset-0 will-change-transform"
+          style={{ transformOrigin: "50% 50%" }}
+        >
+          <img
+            src={stridemedia.biomechanics.src}
+            alt="Marathon runner mid-stride on a city street"
+            className="w-full h-full object-cover select-none"
+            draggable={false}
+          />
 
-        {stops.map((s, i) => (
-          <div
-            key={s.label}
-            className="absolute pointer-events-none"
-            style={{ left: `${s.mx}%`, top: `${s.my}%` }}
-          >
-            {/* Open-ring marker (never filled), slate */}
-            <div
-              ref={(el) => { markerRefs.current[i] = el; }}
-              className="relative -translate-x-1/2 -translate-y-1/2"
-              style={{ opacity: 0, transform: "translate(-50%,-50%) scale(0.6)" }}
-            >
+          {stops.map((s, i) =>
+            i === 0 ? null : (
               <div
-                className="w-8 h-8 rounded-full border-[1.5px]"
-                style={{ borderColor: "var(--slate)" }}
-              />
-              <div
-                className="absolute inset-0 m-auto w-[3px] h-[3px] rounded-full"
-                style={{ background: "var(--slate)" }}
-              />
-              {/* Motion-trail arc, slate */}
-              <svg
-                className="absolute -translate-x-1/2 -translate-y-1/2 left-1/2 top-1/2 overflow-visible"
-                width="140" height="80"
-                viewBox="-70 -40 140 80"
+                key={s.label}
+                ref={(el) => { markerRefs.current[i] = el; }}
+                className="absolute pointer-events-none"
+                style={{
+                  left: `${s.mx}%`,
+                  top: `${s.my}%`,
+                  opacity: 0,
+                  transform: "translate(-50%, -50%)",
+                }}
               >
-                <path
-                  d={`M ${s.trail.x1} ${s.trail.y1} Q ${s.trail.cx} ${s.trail.cy} ${s.trail.x2} ${s.trail.y2}`}
-                  fill="none"
-                  stroke="var(--slate)"
-                  strokeWidth="1"
-                  strokeDasharray="3 4"
-                />
-              </svg>
-            </div>
+                <div className="relative">
+                  <div
+                    className="w-8 h-8 rounded-full border-[1.5px]"
+                    style={{ borderColor: "var(--slate)" }}
+                  />
+                  <div
+                    className="absolute inset-0 m-auto w-[3px] h-[3px] rounded-full"
+                    style={{ background: "var(--slate)" }}
+                  />
+                  <div
+                    className="absolute left-[calc(100%+8px)] top-1/2 -translate-y-1/2 font-mono-tech uppercase whitespace-nowrap"
+                    style={{
+                      color: "var(--slate)",
+                      fontSize: "0.5rem",
+                      letterSpacing: "0.18em",
+                    }}
+                  >
+                    {s.label}
+                  </div>
+                </div>
+              </div>
+            ),
+          )}
+        </div>
 
-            <div
-              ref={(el) => { labelRefs.current[i] = el; }}
-              className="absolute font-mono-tech text-[0.7rem] uppercase tracking-[0.18em] whitespace-nowrap"
-              style={{
-                color: "var(--slate)",
-                left: 24, top: -6, opacity: 0, transform: "translateX(-6px)",
-              }}
-            >
-              {s.label}
-            </div>
-          </div>
-        ))}
+        <div className="absolute inset-0 bg-[color:var(--ink)]/35 pointer-events-none" />
       </div>
 
       <div className="relative z-10 h-full flex flex-col justify-end p-6 md:p-10">
