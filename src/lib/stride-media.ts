@@ -1,12 +1,10 @@
-import heroVideo from "@/assets/hero-run.mp4.asset.json";
-import heroPoster from "@/assets/hero-poster.jpg.asset.json";
-
+// Updated to use the requested Pexels videos directly instead of local asset JSON files
 // Self-hosted hero + poster; other Pexels clips hotlinked for this first pass.
 // TODO(self-host): Download & re-encode remaining clips per STRIDE §5.
 export const stridemedia = {
   hero: {
-    src: heroVideo.url,
-    poster: heroPoster.url,
+    src: "https://videos.pexels.com/video-files/8533442/8533442-hd_1920_1080_25fps.mp4",
+    poster: "https://images.pexels.com/videos/8533442/pictures/preview-0.jpg",
   },
   establish: {
     src: "https://videos.pexels.com/video-files/3125907/3125907-uhd_2560_1440_25fps.mp4",
