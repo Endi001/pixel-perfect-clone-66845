@@ -29,22 +29,19 @@ export function HorizontalRail() {
       const wrap = wrapRef.current!;
       const track = trackRef.current!;
       const distance = track.scrollWidth - window.innerWidth;
-      const hold = window.innerHeight; // vertical settle before horizontal pan begins
 
-      const tl = gsap.timeline({
+      const tween = gsap.to(track, {
+        x: -distance,
+        ease: "none",
         scrollTrigger: {
           trigger: wrap,
           start: "top top",
-          end: () => `+=${distance + hold}`,
+          end: () => `+=${distance}`,
           pin: true,
           scrub: 0.7,
           invalidateOnRefresh: true,
         },
       });
-      // Hold first frame while the user scrolls one viewport into the pin,
-      // then perform the horizontal pan.
-      tl.to(track, { x: 0, duration: 1, ease: "none" })
-        .to(track, { x: -distance, duration: distance / hold, ease: "none" });
 
       // Videos: play only current-most-visible one
       const vids = videosRef.current;
@@ -61,8 +58,8 @@ export function HorizontalRail() {
       vids.forEach((v) => v && io.observe(v));
 
       cleanup = () => {
-        tl.scrollTrigger?.kill();
-        tl.kill();
+        tween.scrollTrigger?.kill();
+        tween.kill();
         io.disconnect();
       };
     })();

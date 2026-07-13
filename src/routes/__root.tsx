@@ -93,14 +93,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         property: "og:description",
         content:
-          "STRIDE is a physiotherapy clinic in Ashfield Quay treating pain, injury and mobility problems. We rebuild movement — assess, treat, rebuild, return.",
+          "Physiotherapy in Ashfield Quay. We treat pain, rebuild movement, and get you back to full speed.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "STRIDE Physiotherapy — Momentum is built, not born." },
-      { name: "twitter:description", content: "STRIDE is a physiotherapy clinic in Ashfield Quay treating pain, injury and mobility problems. We rebuild movement — assess, treat, rebuild, return." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/792ed32c-498c-439f-9456-fc7a7491ebd1/id-preview-0d12645e--030cb33d-8abd-4e03-8e8f-0a12ad0a67a7.lovable.app-1783941170724.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/792ed32c-498c-439f-9456-fc7a7491ebd1/id-preview-0d12645e--030cb33d-8abd-4e03-8e8f-0a12ad0a67a7.lovable.app-1783941170724.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
