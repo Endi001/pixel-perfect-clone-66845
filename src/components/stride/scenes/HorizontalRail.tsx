@@ -40,12 +40,25 @@ export function HorizontalRail() {
           scrub: 0.7,
           anticipatePin: 1,
           invalidateOnRefresh: true,
+          snap: {
+            snapTo: "labels",
+            duration: { min: 0.2, max: 0.6 },
+            delay: 0.1,
+            ease: "power1.inOut"
+          },
         },
       });
       // Hold first frame while the user scrolls one viewport into the pin,
       // then perform the horizontal pan.
-      tl.to(track, { x: 0, duration: 1, ease: "none" })
-        .to(track, { x: -distance, duration: distance / hold, ease: "none" });
+      tl.addLabel("start")
+        .to(track, { x: 0, duration: 1, ease: "none" })
+        .addLabel("slide0");
+        
+      const slideWidth = window.innerWidth;
+      for (let i = 1; i <= clinic.conditions.length; i++) {
+        tl.to(track, { x: -i * slideWidth, duration: slideWidth / hold, ease: "none" })
+          .addLabel(`slide${i}`);
+      }
 
       // Videos: play only current-most-visible one
       const vids = videosRef.current;

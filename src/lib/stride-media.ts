@@ -27,8 +27,7 @@ export const stridemedia = {
     src: "https://images.pexels.com/photos/24308070/pexels-photo-24308070.jpeg?auto=compress&cs=tinysrgb&w=2000",
   },
   sunset: {
-    src: "https://videos.pexels.com/video-files/4440942/4440942-hd_1920_1080_25fps.mp4",
-    poster: "https://images.pexels.com/photos/1339919/pexels-photo-1339919.jpeg?auto=compress&cs=tinysrgb&w=1600",
+    src: "https://videos.pexels.com/video-files/4440942/4440942-hd_1920_1080_25fps.mp4"
   },
 };
 

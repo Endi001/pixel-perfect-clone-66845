@@ -14,7 +14,7 @@ export function ReturnCTA() {
     const v = videoRef.current;
     if (!v) return;
     const io = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) v.play().catch(() => {});
+      if (e.isIntersecting) v.play().catch(() => { });
       else v.pause();
     }, { threshold: 0.2 });
     io.observe(v);
@@ -64,7 +64,6 @@ export function ReturnCTA() {
         <video
           ref={videoRef}
           src={stridemedia.sunset.src}
-          poster={stridemedia.sunset.poster}
           muted
           loop
           playsInline
