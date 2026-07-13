@@ -35,7 +35,21 @@ export function useLenis() {
       gsap.ticker.add(raf);
       gsap.ticker.lagSmoothing(0);
 
+      // Fix ScrollTrigger race conditions with custom fonts
+      if (document.fonts) {
+        document.fonts.ready.then(() => {
+          ScrollTrigger.refresh();
+        });
+      }
+
+      // Safeguard: refresh ScrollTrigger on body height changes (e.g. late image loads)
+      const resizeObserver = new ResizeObserver(() => {
+        ScrollTrigger.refresh();
+      });
+      resizeObserver.observe(document.body);
+
       cleanup = () => {
+        resizeObserver.disconnect();
         gsap.ticker.remove(raf);
         lenis.destroy();
       };

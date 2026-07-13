@@ -38,6 +38,7 @@ export function HorizontalRail() {
           end: () => `+=${distance + hold}`,
           pin: true,
           scrub: 0.7,
+          anticipatePin: 1,
           invalidateOnRefresh: true,
         },
       });
