@@ -20,8 +20,12 @@ export function Interrupted() {
   }, []);
 
   return (
-    <section aria-label="Something stops working" className="stride-section-dark relative overflow-hidden">
-      <div className="relative h-[55svh] md:h-[65svh]">
+    <section
+      aria-label="Something stops working"
+      className="stride-section-dark relative overflow-hidden"
+      style={{ height: "100dvh", minHeight: "100vh" }}
+    >
+      <div className="relative w-full h-full">
         <video
           ref={videoRef}
           className="absolute inset-0 w-full h-full object-cover"
