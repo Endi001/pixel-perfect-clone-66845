@@ -1,24 +1,32 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Hero } from "@/components/stride/scenes/Hero";
+import { Establish } from "@/components/stride/scenes/Establish";
+import { Manifesto } from "@/components/stride/scenes/Manifesto";
+import { HorizontalRail } from "@/components/stride/scenes/HorizontalRail";
+import { Interrupted } from "@/components/stride/scenes/Interrupted";
+import { Biomechanics } from "@/components/stride/scenes/Biomechanics";
+import { Treatments } from "@/components/stride/scenes/Treatments";
+import { Method } from "@/components/stride/scenes/Method";
+import { Testimonials } from "@/components/stride/scenes/Testimonials";
+import { ReturnCTA } from "@/components/stride/scenes/ReturnCTA";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
-  component: Index,
+  component: Home,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+function Home() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
+    <>
+      <Hero />
+      <Establish />
+      <Manifesto />
+      <HorizontalRail />
+      <Interrupted />
+      <Biomechanics />
+      <Treatments />
+      <Method />
+      <Testimonials />
+      <ReturnCTA />
+    </>
   );
 }
