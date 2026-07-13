@@ -18,12 +18,6 @@ export const stridemedia = {
     "https://videos.pexels.com/video-files/14458139/14458139-hd_1920_1080_24fps.mp4",
     "https://videos.pexels.com/video-files/3264775/3264775-hd_1920_1080_24fps.mp4",
   ],
-  // Two persistent layers for the horizontal rail — one wide body plane,
-  // one close-up. Each layer plays exactly one clip continuously.
-  railLayers: {
-    wide: "https://videos.pexels.com/video-files/3191933/3191933-uhd_2560_1440_25fps.mp4",
-    closeup: "https://videos.pexels.com/video-files/3264775/3264775-hd_1920_1080_24fps.mp4",
-  },
   boxing: {
     src: "https://videos.pexels.com/video-files/9777987/9777987-hd_1920_1080_25fps.mp4",
     poster: "https://images.pexels.com/photos/4761791/pexels-photo-4761791.jpeg?auto=compress&cs=tinysrgb&w=1600",

@@ -3,13 +3,11 @@ import { useEffect, useRef } from "react";
 import { stridemedia, clinic } from "@/lib/stride-media";
 
 // Scene 4 — Horizontal acceleration sequence.
-// Two persistent video layers (wide + close-up) stay mounted for the whole
-// horizontal scroll; word panels are transparent text overlays only.
+// Vertical scroll converts to horizontal progression via ScrollTrigger pin+scrub.
 export function HorizontalRail() {
   const wrapRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
-  const wideVideoRef = useRef<HTMLVideoElement>(null);
-  const closeVideoRef = useRef<HTMLVideoElement>(null);
+  const videosRef = useRef<(HTMLVideoElement | null)[]>([]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -31,39 +29,40 @@ export function HorizontalRail() {
       const wrap = wrapRef.current!;
       const track = trackRef.current!;
       const distance = track.scrollWidth - window.innerWidth;
+      const hold = window.innerHeight; // vertical settle before horizontal pan begins
 
-      const tween = gsap.to(track, {
-        x: -distance,
-        ease: "none",
+      const tl = gsap.timeline({
         scrollTrigger: {
           trigger: wrap,
-          start: "top top+=50",
-          end: () => `+=${distance}`,
+          start: "top top",
+          end: () => `+=${distance + hold}`,
           pin: true,
           scrub: 0.7,
-          anticipatePin: 1,
           invalidateOnRefresh: true,
         },
       });
+      // Hold first frame while the user scrolls one viewport into the pin,
+      // then perform the horizontal pan.
+      tl.to(track, { x: 0, duration: 1, ease: "none" })
+        .to(track, { x: -distance, duration: distance / hold, ease: "none" });
 
-      // Both persistent videos begin playing once when the scene is in view.
-      const startVideos = () => {
-        wideVideoRef.current?.play().catch(() => {});
-        closeVideoRef.current?.play().catch(() => {});
-      };
+      // Videos: play only current-most-visible one
+      const vids = videosRef.current;
       const io = new IntersectionObserver(
         (entries) => {
           for (const e of entries) {
-            if (e.isIntersecting) startVideos();
+            const v = e.target as HTMLVideoElement;
+            if (e.isIntersecting) v.play().catch(() => {});
+            else v.pause();
           }
         },
-        { threshold: 0.1 },
+        { root: null, threshold: 0.4 },
       );
-      io.observe(wrap);
+      vids.forEach((v) => v && io.observe(v));
 
       cleanup = () => {
-        tween.scrollTrigger?.kill();
-        tween.kill();
+        tl.scrollTrigger?.kill();
+        tl.kill();
         io.disconnect();
       };
     })();
@@ -71,15 +70,13 @@ export function HorizontalRail() {
     return () => { cancelled = true; cleanup?.(); };
   }, []);
 
-  const panels = clinic.conditions;
-
   return (
     <section aria-label="What we treat" className="stride-section-dark relative">
       {/* Mobile fallback — vertical stack */}
       <div className="md:hidden relative">
         <video
           className="w-full h-[60svh] object-cover"
-          src={stridemedia.railLayers.wide}
+          src={stridemedia.rail[0]}
           poster={stridemedia.establish.poster}
           muted
           loop
@@ -90,7 +87,7 @@ export function HorizontalRail() {
         />
         <div className="absolute inset-0 bg-[color:var(--ink)]/40" />
         <div className="relative -mt-[60svh] h-[60svh] flex flex-col items-center justify-center gap-3">
-          {panels.map((c) => (
+          {clinic.conditions.map((c) => (
             <div key={c} className="font-display text-4xl">{c}</div>
           ))}
         </div>
@@ -103,38 +100,24 @@ export function HorizontalRail() {
 
       {/* Desktop horizontal rail */}
       <div ref={wrapRef} className="hidden md:block relative h-[100svh] overflow-hidden">
-        {/* Persistent video layers — never remount */}
-        <div className="absolute inset-0 pointer-events-none">
-          <video
-            ref={wideVideoRef}
-            className="absolute inset-0 w-1/2 h-full object-cover"
-            src={stridemedia.railLayers.wide}
-            muted
-            loop
-            playsInline
-            preload="auto"
-            aria-hidden
-          />
-          <video
-            ref={closeVideoRef}
-            className="absolute inset-y-0 right-0 w-1/2 h-full object-cover"
-            src={stridemedia.railLayers.closeup}
-            muted
-            loop
-            playsInline
-            preload="auto"
-            aria-hidden
-          />
-          <div className="absolute inset-0 bg-[color:var(--ink)]/50" />
-        </div>
-
         <div
           ref={trackRef}
           className="absolute top-0 left-0 h-full flex will-change-transform"
-          style={{ width: `${(panels.length + 1) * 100}vw` }}
+          style={{ width: `${(clinic.conditions.length + 1) * 100}vw` }}
         >
-          {panels.map((word, i) => (
+          {clinic.conditions.map((word, i) => (
             <div key={word} className="relative w-screen h-full shrink-0">
+              <video
+                ref={(el) => { videosRef.current[i] = el; }}
+                className="absolute inset-0 w-full h-full object-cover"
+                src={stridemedia.rail[i % stridemedia.rail.length]}
+                muted
+                loop
+                playsInline
+                preload="metadata"
+                aria-hidden
+              />
+              <div className="absolute inset-0 bg-[color:var(--ink)]/45" />
               <div className="relative h-full flex items-center justify-center px-10">
                 <div className="font-display uppercase text-[color:var(--text-on-dark)] leading-[0.85]"
                   style={{ fontSize: "clamp(6rem, 22vw, 24rem)" }}>
@@ -142,12 +125,12 @@ export function HorizontalRail() {
                 </div>
               </div>
               <div className="absolute top-8 left-10 eyebrow text-[color:var(--muted-on-dark)]">
-                0{i + 1} / 0{panels.length}
+                0{i + 1} / 0{clinic.conditions.length}
               </div>
             </div>
           ))}
           {/* End card */}
-          <div className="relative w-screen h-full shrink-0 flex items-center justify-center">
+          <div className="relative w-screen h-full shrink-0 flex items-center justify-center bg-[color:var(--ink)]">
             <div className="text-center">
               <div className="eyebrow text-[color:var(--muted-on-dark)] mb-4">And a lot more</div>
               <Link
