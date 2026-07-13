@@ -61,8 +61,8 @@ export function HorizontalRail() {
       vids.forEach((v) => v && io.observe(v));
 
       cleanup = () => {
-        tween.scrollTrigger?.kill();
-        tween.kill();
+        tl.scrollTrigger?.kill();
+        tl.kill();
         io.disconnect();
       };
     })();
