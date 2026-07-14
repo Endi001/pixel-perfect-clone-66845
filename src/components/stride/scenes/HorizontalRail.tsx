@@ -1,6 +1,10 @@
 import { Link } from "@tanstack/react-router";
-import { useEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { stridemedia, clinic } from "@/lib/stride-media";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 // Scene 4 — Horizontal acceleration sequence.
 // Vertical scroll converts to horizontal progression via ScrollTrigger pin+scrub.
@@ -9,65 +13,56 @@ export function HorizontalRail() {
   const trackRef = useRef<HTMLDivElement>(null);
   const videosRef = useRef<(HTMLVideoElement | null)[]>([]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (typeof window === "undefined") return;
     const prefersReduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     const isMobile = window.matchMedia?.("(max-width: 767px)").matches;
     if (prefersReduced || isMobile) return;
 
     let cleanup: (() => void) | undefined;
-    let cancelled = false;
 
-    (async () => {
-      const gsapMod = await import("gsap");
-      const stMod = await import("gsap/ScrollTrigger");
-      if (cancelled) return;
-      const gsap = gsapMod.default ?? gsapMod;
-      const ScrollTrigger = stMod.ScrollTrigger;
-      gsap.registerPlugin(ScrollTrigger);
+    const wrap = wrapRef.current!;
+    const track = trackRef.current!;
+    const getDistance = () => track.scrollWidth - window.innerWidth;
+    const getHold = () => window.innerHeight; // vertical settle before horizontal pan begins
 
-      const wrap = wrapRef.current!;
-      const track = trackRef.current!;
-      const getDistance = () => track.scrollWidth - window.innerWidth;
-      const getHold = () => window.innerHeight; // vertical settle before horizontal pan begins
+    const tl = gsap.timeline({
+      scrollTrigger: {
+        trigger: wrap,
+        start: "top top",
+        end: () => `+=${getDistance() + getHold()}`,
+        pin: true,
+        scrub: true,
+        invalidateOnRefresh: true,
+        refreshPriority: 1,
+      },
+    });
+    // Hold first frame while the user scrolls one viewport into the pin,
+    // then perform the horizontal pan.
+    tl.to(track, { x: 0, duration: () => getHold(), ease: "none" })
+      .to(track, { x: () => -getDistance(), duration: () => getDistance(), ease: "none" });
 
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: wrap,
-          start: "top top",
-          end: () => `+=${getDistance() + getHold()}`,
-          pin: true,
-          scrub: true,
-          invalidateOnRefresh: true,
-        },
-      });
-      // Hold first frame while the user scrolls one viewport into the pin,
-      // then perform the horizontal pan.
-      tl.to(track, { x: 0, duration: () => getHold(), ease: "none" })
-        .to(track, { x: () => -getDistance(), duration: () => getDistance(), ease: "none" });
+    // Videos: play only current-most-visible one
+    const vids = videosRef.current;
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          const v = e.target as HTMLVideoElement;
+          if (e.isIntersecting) v.play().catch(() => {});
+          else v.pause();
+        }
+      },
+      { root: null, threshold: 0.4 },
+    );
+    vids.forEach((v) => v && io.observe(v));
 
-      // Videos: play only current-most-visible one
-      const vids = videosRef.current;
-      const io = new IntersectionObserver(
-        (entries) => {
-          for (const e of entries) {
-            const v = e.target as HTMLVideoElement;
-            if (e.isIntersecting) v.play().catch(() => {});
-            else v.pause();
-          }
-        },
-        { root: null, threshold: 0.4 },
-      );
-      vids.forEach((v) => v && io.observe(v));
+    cleanup = () => {
+      tl.scrollTrigger?.kill();
+      tl.kill();
+      io.disconnect();
+    };
 
-      cleanup = () => {
-        tl.scrollTrigger?.kill();
-        tl.kill();
-        io.disconnect();
-      };
-    })();
-
-    return () => { cancelled = true; cleanup?.(); };
+    return () => { cleanup?.(); };
   }, []);
 
   return (

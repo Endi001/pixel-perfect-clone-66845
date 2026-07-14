@@ -1,5 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { stridemedia } from "@/lib/stride-media";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 type Stop = {
   label: string;
@@ -42,7 +46,7 @@ export function Biomechanics() {
   const markerRefs = useRef<(HTMLDivElement | null)[]>([]);
   const labelRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (typeof window === "undefined") return;
     const prefersReduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     const isMobile = window.matchMedia?.("(max-width: 767px)").matches;
@@ -54,48 +58,39 @@ export function Biomechanics() {
     }
 
     let cleanup: (() => void) | undefined;
-    let cancelled = false;
 
-    (async () => {
-      const gsapMod = await import("gsap");
-      const stMod = await import("gsap/ScrollTrigger");
-      if (cancelled) return;
-      const gsap = gsapMod.default ?? gsapMod;
-      const ScrollTrigger = stMod.ScrollTrigger;
-      gsap.registerPlugin(ScrollTrigger);
+    // Set initial state to the first stop so there's no jump on enter.
+    gsap.set(stageRef.current, panFor(stops[0]));
 
-      // Set initial state to the first stop so there's no jump on enter.
-      gsap.set(stageRef.current, panFor(stops[0]));
+    const tl = gsap.timeline({
+      defaults: { ease: "power2.inOut" },
+      scrollTrigger: {
+        trigger: sectionRef.current,
+        start: "top top",
+        end: "+=300%",
+        pin: true,
+        scrub: 0.8,
+        refreshPriority: 0,
+      },
+    });
 
-      const tl = gsap.timeline({
-        defaults: { ease: "power2.inOut" },
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: "top top",
-          end: "+=300%",
-          pin: true,
-          scrub: 0.8,
-        },
-      });
-
-      stops.forEach((s, i) => {
-        // Reveal the current marker/label first
-        tl.to(markerRefs.current[i], { opacity: 1, scale: 1, duration: 0.3 }, ">");
-        tl.to(labelRefs.current[i], { opacity: 1, x: 0, duration: 0.3 }, "<");
-        // Hold at this focal point
+    stops.forEach((s, i) => {
+      // Reveal the current marker/label first
+      tl.to(markerRefs.current[i], { opacity: 1, scale: 1, duration: 0.3 }, ">");
+      tl.to(labelRefs.current[i], { opacity: 1, x: 0, duration: 0.3 }, "<");
+      // Hold at this focal point
+      tl.to({}, { duration: 0.6 });
+      // Glide to the next stop (except after the last one)
+      if (i < stops.length - 1) {
+        tl.to(stageRef.current, { ...panFor(stops[i + 1]), duration: 1.2 });
+      } else {
         tl.to({}, { duration: 0.6 });
-        // Glide to the next stop (except after the last one)
-        if (i < stops.length - 1) {
-          tl.to(stageRef.current, { ...panFor(stops[i + 1]), duration: 1.2 });
-        } else {
-          tl.to({}, { duration: 0.6 });
-        }
-      });
+      }
+    });
 
-      cleanup = () => { tl.scrollTrigger?.kill(); tl.kill(); };
-    })();
+    cleanup = () => { tl.scrollTrigger?.kill(); tl.kill(); };
 
-    return () => { cancelled = true; cleanup?.(); };
+    return () => { cleanup?.(); };
   }, []);
 
   return (

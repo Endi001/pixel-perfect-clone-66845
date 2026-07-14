@@ -40,3 +40,40 @@ This plan addresses two issues with the horizontal-scroll carousel section (`Hor
 - Scroll through the carousel; verify that each card (BACK, SHOULDER, etc.) moves 1:1 with the scroll wheel/trackpad.
 - Ensure there are no "dead zones" where scrolling does nothing, and no sudden skips/jumps over cards.
 - Resize the browser window and verify that the scroll distances recalculate correctly without breaking the layout.
+
+## PART 2: Fixing Layout Thrashing and Section Overlap
+
+### Root Causes Identified
+The issue where subsequent sections (like Biomechanics) "pop up suddenly" and overlap with the horizontal scroll section is caused by **GSAP ScrollTrigger Layout Thrashing due to Asynchronous Initialization**.
+- When `pin: true` is used, GSAP adds a massive `.pin-spacer` to the DOM, increasing the page height.
+- Because `HorizontalRail` and `Biomechanics` dynamically import GSAP (`await import("gsap")`) inside `useEffect`, their ScrollTriggers are created in a non-deterministic order.
+- If a section lower down the page (Biomechanics) initializes its trigger before a section higher up (HorizontalRail) adds its pin spacer, the lower section's start/end coordinates will be completely wrong. When you scroll down, it will trigger way too early.
+
+### Proposed Changes
+
+1. [x] **Synchronous GSAP Imports:**
+   - Move GSAP imports to the top level of the files (`import gsap from "gsap"`, `import { ScrollTrigger } from "gsap/ScrollTrigger"`) in both `HorizontalRail.tsx` and `Biomechanics.tsx`.
+   - Ensure `gsap.registerPlugin(ScrollTrigger)` is called appropriately.
+2. [x] **Coordinate ScrollTrigger Refresh:**
+   - Since standard React `useEffect` hooks run bottom-up, we need to assign `refreshPriority` to the ScrollTriggers so GSAP calculates layouts top-to-bottom (e.g., `refreshPriority: 1` for HorizontalRail, `refreshPriority: 0` for Biomechanics).
+3. [x] **Remove dynamic async import blocks:**
+   - Replace the `(async () => { ... })()` pattern inside `useEffect` with standard synchronous initialization for both components.
+
+## PART 3: Forcing Global Refresh & Lifecycle Sync
+
+### Root Causes Identified
+Even with `refreshPriority` set, `Biomechanics` is still overlapping `HorizontalRail` and causing a massive white gap below `Interrupted.tsx`. 
+This happens because **React's `useEffect` runs bottom-up, but GSAP does not automatically recalculate all existing triggers when a new one is created.**
+1. `Biomechanics` runs its `useEffect` and creates a trigger, measuring its `top` position.
+2. `HorizontalRail` runs its `useEffect` (after Biomechanics) and adds a `700vw` pin spacer.
+3. Although `HorizontalRail` refreshes *itself*, it does **not** force `Biomechanics` to refresh its already-recorded `top` position. Thus, `Biomechanics` still thinks it should trigger at its original, un-spacered position!
+4. The user scrolls down. `Biomechanics` triggers early (while the user is looking at "NECK." in `HorizontalRail`), pins itself on top of the screen, finishes its scrub animation, and then unpins.
+5. When the user finally reaches where `Biomechanics` *should* be (below `Interrupted`), the animation is completely finished and the pin-spacer is just an empty white gap.
+
+### Proposed Changes
+
+1. [x] **Change `useEffect` to `useLayoutEffect`:**
+   - In both `HorizontalRail.tsx` and `Biomechanics.tsx`, switch from `useEffect` to `useLayoutEffect`. This ensures the DOM mutations and ScrollTrigger creations happen synchronously before the browser paints.
+2. [x] **Force a Global `ScrollTrigger.refresh()` in Parent:**
+   - Open `src/routes/index.tsx` (the parent container for these scenes).
+   - Add a `useEffect` that calls `ScrollTrigger.refresh()` after a short timeout or immediately. Because parent `useEffect`s fire *after* all child `useEffect`s, this guarantees that all `ScrollTrigger`s have been created and registered. When this global refresh fires, GSAP will use the `refreshPriority` we set in Part 2 to sort them, apply `HorizontalRail`'s pin spacer first, and then correctly calculate `Biomechanics`'s start point!
