@@ -23,8 +23,8 @@ export const stridemedia = {
     poster: "https://images.pexels.com/photos/4761791/pexels-photo-4761791.jpeg?auto=compress&cs=tinysrgb&w=1600",
   },
   biomechanics: {
-    // João Godoy — man running in race, mid-stride
-    src: "https://images.pexels.com/photos/24308070/pexels-photo-24308070.jpeg?auto=compress&cs=tinysrgb&w=2000",
+    // Men running on a trail at a marathon race
+    src: "https://images.pexels.com/photos/18408908/pexels-photo-18408908.jpeg?auto=compress&cs=tinysrgb&w=2000",
   },
   sunset: {
     src: "https://videos.pexels.com/video-files/4440942/4440942-hd_1920_1080_25fps.mp4"

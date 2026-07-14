@@ -14,12 +14,18 @@ type Stop = {
 };
 
 const stops: Stop[] = [
-  { label: "GROUND CONTACT", fx: 55, fy: 86, scale: 1.9,
-    trail: { x1: 8, y1: -30, cx: 30, cy: -60, x2: 60, y2: -20 } },
-  { label: "HIP EXTENSION", fx: 52, fy: 58, scale: 2.0,
-    trail: { x1: -40, y1: 10, cx: -20, cy: -30, x2: 20, y2: -10 } },
-  { label: "SHOULDER DRIVE", fx: 48, fy: 32, scale: 1.85,
-    trail: { x1: 30, y1: -10, cx: 0, cy: -40, x2: -50, y2: -20 } },
+  {
+    label: "GROUND CONTACT", fx: 42, fy: 88, scale: 2.2,
+    trail: { x1: 8, y1: -30, cx: 30, cy: -60, x2: 60, y2: -20 }
+  },
+  {
+    label: "HIP EXTENSION", fx: 46, fy: 48, scale: 2.0,
+    trail: { x1: -40, y1: 10, cx: -20, cy: -30, x2: 20, y2: -10 }
+  },
+  {
+    label: "SHOULDER DRIVE", fx: 45, fy: 25, scale: 2.2,
+    trail: { x1: 30, y1: -10, cx: 0, cy: -40, x2: -50, y2: -20 }
+  },
 ];
 
 // Convert focal-point + scale into a translate that centers that point.
@@ -59,8 +65,13 @@ export function Biomechanics() {
 
     let cleanup: (() => void) | undefined;
 
-    // Set initial state to the first stop so there's no jump on enter.
-    gsap.set(stageRef.current, panFor(stops[0]));
+    // Set initial state zoomed out, centered.
+    gsap.set(stageRef.current, { scale: 1, xPercent: 0, yPercent: 0 });
+
+    // Initialize markers natively via GSAP to avoid transform string conflicts
+    markerRefs.current.forEach(m => {
+      if (m) gsap.set(m, { xPercent: -50, yPercent: -50, scale: 0.6 });
+    });
 
     const tl = gsap.timeline({
       defaults: { ease: "power2.inOut" },
@@ -72,6 +83,9 @@ export function Biomechanics() {
         scrub: 0.8,
       },
     });
+
+    // Zoom into the first stop before showing its marker
+    tl.to(stageRef.current, { ...panFor(stops[0]), duration: 1.2 });
 
     stops.forEach((s, i) => {
       // Reveal the current marker/label first
@@ -111,6 +125,7 @@ export function Biomechanics() {
             className="w-full h-full object-cover select-none"
             draggable={false}
           />
+          <div className="absolute inset-0 bg-[color:var(--ink)]/35 pointer-events-none" />
 
           {stops.map((s, i) => (
             <div
@@ -120,8 +135,8 @@ export function Biomechanics() {
             >
               <div
                 ref={(el) => { markerRefs.current[i] = el; }}
-                className="relative -translate-x-1/2 -translate-y-1/2"
-                style={{ opacity: 0, transform: "translate(-50%,-50%) scale(0.6)" }}
+                className="relative"
+                style={{ opacity: 0 }}
               >
                 <div
                   className="w-8 h-8 rounded-full border-[1.5px]"
@@ -159,8 +174,6 @@ export function Biomechanics() {
             </div>
           ))}
         </div>
-
-        <div className="absolute inset-0 bg-[color:var(--ink)]/35 pointer-events-none" />
       </div>
 
       <div className="relative z-10 h-full flex flex-col justify-end p-6 md:p-10 pointer-events-none">
