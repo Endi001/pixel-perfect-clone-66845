@@ -24,7 +24,7 @@ export function HorizontalRail() {
     const wrap = wrapRef.current!;
     const track = trackRef.current!;
     const getDistance = () => track.scrollWidth - window.innerWidth;
-    const getHold = () => window.innerHeight; // vertical settle before horizontal pan begins
+    const getHold = () => window.innerHeight * 0.3; // shorter vertical settle before horizontal pan begins
 
     const tl = gsap.timeline({
       scrollTrigger: {
@@ -36,7 +36,7 @@ export function HorizontalRail() {
         invalidateOnRefresh: true,
       },
     });
-    // Hold first frame while the user scrolls one viewport into the pin,
+    // Hold first frame briefly while the user scrolls into the pin,
     // then perform the horizontal pan.
     tl.to(track, { x: 0, duration: () => getHold(), ease: "none" })
       .to(track, { x: () => -getDistance(), duration: () => getDistance(), ease: "none" });
