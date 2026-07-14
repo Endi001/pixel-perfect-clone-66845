@@ -28,37 +28,23 @@ export function HorizontalRail() {
 
       const wrap = wrapRef.current!;
       const track = trackRef.current!;
-      const distance = track.scrollWidth - window.innerWidth;
-      const hold = window.innerHeight; // vertical settle before horizontal pan begins
+      const getDistance = () => track.scrollWidth - window.innerWidth;
+      const getHold = () => window.innerHeight; // vertical settle before horizontal pan begins
 
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: wrap,
           start: "top top",
-          end: () => `+=${distance + hold}`,
+          end: () => `+=${getDistance() + getHold()}`,
           pin: true,
-          scrub: 0.7,
-          anticipatePin: 1,
+          scrub: true,
           invalidateOnRefresh: true,
-          snap: {
-            snapTo: "labels",
-            duration: { min: 0.2, max: 0.6 },
-            delay: 0.1,
-            ease: "power1.inOut"
-          },
         },
       });
       // Hold first frame while the user scrolls one viewport into the pin,
       // then perform the horizontal pan.
-      tl.addLabel("start")
-        .to(track, { x: 0, duration: 1, ease: "none" })
-        .addLabel("slide0");
-        
-      const slideWidth = window.innerWidth;
-      for (let i = 1; i <= clinic.conditions.length; i++) {
-        tl.to(track, { x: -i * slideWidth, duration: slideWidth / hold, ease: "none" })
-          .addLabel(`slide${i}`);
-      }
+      tl.to(track, { x: 0, duration: () => getHold(), ease: "none" })
+        .to(track, { x: () => -getDistance(), duration: () => getDistance(), ease: "none" });
 
       // Videos: play only current-most-visible one
       const vids = videosRef.current;
