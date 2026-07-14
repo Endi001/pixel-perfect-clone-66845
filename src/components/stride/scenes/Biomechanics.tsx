@@ -70,7 +70,6 @@ export function Biomechanics() {
         end: "+=300%",
         pin: true,
         scrub: 0.8,
-        refreshPriority: 0,
       },
     });
 

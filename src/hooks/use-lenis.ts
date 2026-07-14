@@ -1,9 +1,10 @@
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-// Bootstraps Lenis smooth scroll + wires ScrollTrigger to Lenis's scroll signal.
-// Feature-detects prefers-reduced-motion and no-ops when set.
+gsap.registerPlugin(ScrollTrigger);
 export function useLenis() {
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (typeof window === "undefined") return;
     const prefersReduced =
       window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
@@ -14,13 +15,7 @@ export function useLenis() {
 
     (async () => {
       const Lenis = (await import("lenis")).default;
-      const gsapMod = await import("gsap");
-      const stMod = await import("gsap/ScrollTrigger");
       if (cancelled) return;
-
-      const gsap = gsapMod.default ?? gsapMod;
-      const ScrollTrigger = stMod.ScrollTrigger;
-      gsap.registerPlugin(ScrollTrigger);
 
       const lenis = new Lenis({
         duration: 1.05,

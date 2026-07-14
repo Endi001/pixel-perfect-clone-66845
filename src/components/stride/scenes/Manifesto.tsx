@@ -1,48 +1,38 @@
-import { useEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 // Scene 3 — Kinetic manifesto. Word-by-word scroll-linked reveal.
 export function Manifesto() {
   const sectionRef = useRef<HTMLElement>(null);
   const wordsRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (typeof window === "undefined") return;
     const prefersReduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     if (prefersReduced) return;
 
-    let cleanup: (() => void) | undefined;
-    let cancelled = false;
+    const words = wordsRef.current?.querySelectorAll(".m-word");
+    if (!words || words.length === 0) return;
 
-    (async () => {
-      const gsapMod = await import("gsap");
-      const stMod = await import("gsap/ScrollTrigger");
-      if (cancelled) return;
-      const gsap = gsapMod.default ?? gsapMod;
-      const ScrollTrigger = stMod.ScrollTrigger;
-      gsap.registerPlugin(ScrollTrigger);
+    gsap.set(words, { opacity: 0.12, y: 20 });
+    const tl = gsap.timeline({
+      scrollTrigger: {
+        trigger: sectionRef.current,
+        start: "top 80%",
+        end: "bottom 40%",
+        scrub: 0.6,
+      },
+    });
+    // Drive-phase, roughly one word per 80px
+    tl.to(words, { opacity: 1, y: 0, stagger: 0.04, ease: "none" });
 
-      const words = wordsRef.current?.querySelectorAll(".m-word");
-      if (!words || words.length === 0) return;
-
-      gsap.set(words, { opacity: 0.12, y: 20 });
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: "top 80%",
-          end: "bottom 40%",
-          scrub: 0.6,
-        },
-      });
-      // Drive-phase, roughly one word per 80px
-      tl.to(words, { opacity: 1, y: 0, stagger: 0.04, ease: "none" });
-
-      cleanup = () => {
-        tl.scrollTrigger?.kill();
-        tl.kill();
-      };
-    })();
-
-    return () => { cancelled = true; cleanup?.(); };
+    return () => {
+      tl.scrollTrigger?.kill();
+      tl.kill();
+    };
   }, []);
 
   const line = "The body isn't fragile. It's undertrained for what happened to it.";

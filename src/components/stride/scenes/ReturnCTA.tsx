@@ -1,6 +1,10 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { stridemedia, clinic } from "@/lib/stride-media";
 import { useBooking } from "../booking-context";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 // Scene 10 — Return to movement / booking CTA.
 // Warm gold overlay scroll-linked (Flight-phase) atop the sunset clip.
@@ -21,21 +25,10 @@ export function ReturnCTA() {
     return () => io.disconnect();
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (typeof window === "undefined") return;
     const prefersReduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     if (prefersReduced) return;
-
-    let cleanup: (() => void) | undefined;
-    let cancelled = false;
-
-    (async () => {
-      const gsapMod = await import("gsap");
-      const stMod = await import("gsap/ScrollTrigger");
-      if (cancelled) return;
-      const gsap = gsapMod.default ?? gsapMod;
-      const ScrollTrigger = stMod.ScrollTrigger;
-      gsap.registerPlugin(ScrollTrigger);
 
       const tw = gsap.fromTo(
         overlayRef.current,
@@ -52,10 +45,10 @@ export function ReturnCTA() {
         },
       );
 
-      cleanup = () => { tw.scrollTrigger?.kill(); tw.kill(); };
-    })();
-
-    return () => { cancelled = true; cleanup?.(); };
+    return () => {
+      tw.scrollTrigger?.kill();
+      tw.kill();
+    };
   }, []);
 
   return (

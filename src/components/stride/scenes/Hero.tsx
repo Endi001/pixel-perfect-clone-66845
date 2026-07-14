@@ -1,6 +1,10 @@
-import { useEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { stridemedia, clinic } from "@/lib/stride-media";
 import { useBooking } from "../booking-context";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 export function Hero() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -14,26 +18,15 @@ export function Hero() {
   const cueRef = useRef<HTMLDivElement>(null);
   const { openModal } = useBooking();
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (typeof window === "undefined") return;
     const prefersReduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     const isMobile = window.matchMedia?.("(max-width: 767px)").matches;
     if (prefersReduced || isMobile) return;
 
-    let cleanup: (() => void) | undefined;
-    let cancelled = false;
-
-    (async () => {
-      const gsapMod = await import("gsap");
-      const stMod = await import("gsap/ScrollTrigger");
-      if (cancelled) return;
-      const gsap = gsapMod.default ?? gsapMod;
-      const ScrollTrigger = stMod.ScrollTrigger;
-      gsap.registerPlugin(ScrollTrigger);
-
-      const section = sectionRef.current!;
-      const mask = maskRef.current!;
-      const wraps = [w2Ref.current!, w3Ref.current!, w4Ref.current!];
+    const section = sectionRef.current!;
+    const mask = maskRef.current!;
+    const wraps = [w2Ref.current!, w3Ref.current!, w4Ref.current!];
 
       // Drive-phase entrance
       gsap.set([w2Ref.current, w3Ref.current, w4Ref.current], { clipPath: "inset(0 100% 0 0)" });
@@ -62,15 +55,9 @@ export function Hero() {
       // Recovery-phase headline settle: subtle nudge into position at end
       tl.to(headlineRef.current, { y: -8, ease: "none", duration: 0.2 }, 0.85);
 
-      cleanup = () => {
-        tl.scrollTrigger?.kill();
-        tl.kill();
-      };
-    })();
-
     return () => {
-      cancelled = true;
-      cleanup?.();
+      tl.scrollTrigger?.kill();
+      tl.kill();
     };
   }, []);
 

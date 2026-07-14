@@ -34,7 +34,6 @@ export function HorizontalRail() {
         pin: true,
         scrub: true,
         invalidateOnRefresh: true,
-        refreshPriority: 1,
       },
     });
     // Hold first frame while the user scrolls one viewport into the pin,
