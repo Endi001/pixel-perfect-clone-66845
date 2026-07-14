@@ -29,7 +29,7 @@ export function HorizontalRail() {
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger: wrap,
-        start: "top top",
+        start: "top 64px",
         end: () => `+=${getDistance() + getHold()}`,
         pin: true,
         scrub: true,
@@ -93,10 +93,10 @@ export function HorizontalRail() {
       </div>
 
       {/* Desktop horizontal rail */}
-      <div ref={wrapRef} className="hidden md:block relative h-[100svh] overflow-hidden">
+      <div ref={wrapRef} className="hidden md:block relative h-[calc(100svh-4rem)] overflow-hidden bg-[color:var(--ink)]">
         <div
           ref={trackRef}
-          className="absolute top-0 left-0 h-full flex will-change-transform"
+          className="absolute top-0 left-0 flex will-change-transform h-full"
           style={{ width: `${(clinic.conditions.length + 1) * 100}vw` }}
         >
           {clinic.conditions.map((word, i) => (
