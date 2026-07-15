@@ -28,32 +28,32 @@ export function Hero() {
     const mask = maskRef.current!;
     const wraps = [w2Ref.current!, w3Ref.current!, w4Ref.current!];
 
-      // Drive-phase entrance
-      gsap.set([w2Ref.current, w3Ref.current, w4Ref.current], { clipPath: "inset(0 100% 0 0)" });
-      gsap.set(w1Ref.current, { scale: 1 });
+    // Drive-phase entrance
+    gsap.set([w2Ref.current, w3Ref.current, w4Ref.current], { clipPath: "inset(0 100% 0 0)" });
+    gsap.set(w1Ref.current, { scale: 1 });
 
-      // Flight-phase: scroll-linked mask widen + headline assembly
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: section,
-          start: "top top",
-          end: "+=100%",
-          scrub: 0.8,
-          pin: true,
-          anticipatePin: 1,
-        },
-      });
+    // Flight-phase: scroll-linked mask widen + headline assembly
+    const tl = gsap.timeline({
+      scrollTrigger: {
+        trigger: section,
+        start: "top top",
+        end: "+=100%",
+        scrub: 0.8,
+        pin: true,
+        anticipatePin: 1,
+      },
+    });
 
-      // Mask widens (Flight-phase, scrubbed 1:1)
-      tl.fromTo(mask, { clipPath: "inset(18% 22% 18% 22%)" }, { clipPath: "inset(0% 0% 0% 0%)", ease: "none" }, 0);
-      // Scroll cue fades out early
-      tl.to(cueRef.current, { opacity: 0, duration: 0.1 }, 0);
-      // Word 2, 3, 4 mask-reveal sequentially
-      wraps.forEach((el, i) => {
-        tl.to(el, { clipPath: "inset(0 0% 0 0)", ease: "none", duration: 0.28 }, 0.15 + i * 0.22);
-      });
-      // Recovery-phase headline settle: subtle nudge into position at end
-      tl.to(headlineRef.current, { y: -8, ease: "none", duration: 0.2 }, 0.85);
+    // Mask widens (Flight-phase, scrubbed 1:1)
+    tl.fromTo(mask, { clipPath: "inset(18% 22% 18% 22%)" }, { clipPath: "inset(0% 0% 0% 0%)", ease: "none" }, 0);
+    // Scroll cue fades out early
+    tl.to(cueRef.current, { opacity: 0, duration: 0.1 }, 0);
+    // Word 2, 3, 4 mask-reveal sequentially
+    wraps.forEach((el, i) => {
+      tl.to(el, { clipPath: "inset(0 0% 0 0)", ease: "none", duration: 0.28 }, 0.15 + i * 0.22);
+    });
+    // Recovery-phase headline settle: subtle nudge into position at end
+    tl.to(headlineRef.current, { y: -8, ease: "none", duration: 0.2 }, 0.85);
 
     return () => {
       tl.scrollTrigger?.kill();
@@ -140,9 +140,7 @@ export function Hero() {
         </p>
         <div className="flex flex-wrap gap-3">
           <button
-            data-cal-namespace="1h"
-            data-cal-link="endi-b3omc8/1h"
-            data-cal-config='{"layout":"month_view","useSlotsViewOnSmallScreen":"true"}'
+            onClick={openModal}
             className="bg-[color:var(--ember)] px-5 py-3 text-[color:var(--ember-foreground)] font-medium cursor-pointer"
             style={{ borderRadius: 3 }}
           >

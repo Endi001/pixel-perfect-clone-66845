@@ -24,11 +24,9 @@ This plan outlines the steps for integrating a Cal.com booking modal into the ap
 
 ## Implementation Checklist
 
-- `[x]` 1. **Confirm Approach:** Using the Cal.com native popup modal triggered by click, as requested.
+- `[x]` 1. **Confirm Approach:** Embed inline within the existing `BookingModal.tsx` as confirmed to keep custom animations.
 - `[x]` 2. **Install Package:** Installed `@calcom/embed-react`.
-- `[x]` 3. **Implement Logic:** 
-   - Added `getCalApi` initialization to `AppShell` in `__root.tsx`.
-   - Updated CTA buttons in `Hero.tsx`, `SiteNav.tsx`, `ExpressiveMenu.tsx`, and `ReturnCTA.tsx` to use `data-cal-link` instead of `openModal`.
-- `[x]` 4. **Apply Styling:** Left existing button styling completely untouched so it remains matching the UI seamlessly.
-- `[x]` 5. **Clean Up:** Removed the old custom `BookingModal` usage from `__root.tsx` to prevent overlapping modals. (Note: `BookingProvider` can be optionally deleted later if unused).
-- `[x]` 6. **Test Validation:** The Cal.com popup will now trigger universally across the app.
+- `[x]` 3. **Implement Logic:** Modified `src/components/stride/BookingModal.tsx` to render the `<Cal>` component from `@calcom/embed-react` instead of the Calendly skeleton placeholder. Left all global buttons exactly as they were (`onClick={openModal}`) to trigger the beautiful animated custom modal wrapper.
+- `[x]` 4. **Apply Styling:** Inherited the styled `BookingModal.tsx` wrapper and passed custom `config={{ styles: { branding: { brandColor: "#FF5A36" } } }}` to the Cal component to perfectly match the site's `--ember` primary color.
+- `[x]` 5. **Clean Up:** Removed the simulated `embedFailed` fallback logic.
+- `[x]` 6. **Test Validation:** The calendar will now render fully interactive in the modal with correct custom animations and branding.

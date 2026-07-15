@@ -1,16 +1,15 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useBooking } from "./booking-context";
 import { clinic } from "@/lib/stride-media";
+import Cal, { getCalApi } from "@calcom/embed-react";
 
 export function BookingModal() {
   const { open, closeModal } = useBooking();
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
-  const [embedFailed, setEmbedFailed] = useState(false);
 
   useEffect(() => {
     if (!open) return;
-    setEmbedFailed(false);
     const prev = document.activeElement as HTMLElement | null;
     closeRef.current?.focus();
     document.body.style.overflow = "hidden";
@@ -29,13 +28,30 @@ export function BookingModal() {
     };
     document.addEventListener("keydown", onKey);
 
-    // Calendly embed placeholder — mark failed after 6s so user can see the fallback.
-    const t = window.setTimeout(() => setEmbedFailed(true), 6000);
+    // Initialize Cal UI configuration with STRIDE branding
+    (async function () {
+      const cal = await getCalApi({ namespace: "1h" });
+      cal("ui", { 
+        hideEventTypeDetails: false, 
+        layout: "month_view",
+        theme: "light",
+        cssVarsPerTheme: {
+          light: {
+            "cal-brand": "#FF5A36",
+            "cal-text": "#14151A",
+            "cal-bg": "#F5F3EF",
+            "cal-border": "#D6D2C9",
+            "cal-muted": "#6f6d67"
+          },
+          dark: {} // Required by TS
+        },
+        styles: { branding: { brandColor: "#FF5A36" } }
+      });
+    })();
 
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
-      window.clearTimeout(t);
       prev?.focus?.();
     };
   }, [open, closeModal]);
@@ -89,47 +105,23 @@ export function BookingModal() {
           </button>
         </div>
 
-        <div className="relative flex-1 overflow-auto">
-          <div
-            data-calendly-embed
-            className="aspect-[4/5] md:aspect-[3/4] w-full bg-[color:var(--muted)] relative overflow-hidden"
-          >
-            {/* Skeleton shimmer while a real Calendly embed would load */}
-            <div
-              className="absolute inset-0"
-              style={{
-                background:
-                  "linear-gradient(90deg, transparent, rgba(0,0,0,0.05), transparent)",
-                backgroundSize: "200% 100%",
-                animation: "stride-shimmer 1.6s linear infinite",
-              }}
-            />
-            <div className="absolute inset-0 flex items-center justify-center p-6 text-center">
-              <div className="eyebrow text-[color:var(--muted-on-light)]">
-                {embedFailed ? "Scheduler unavailable" : "Loading scheduler…"}
-              </div>
-            </div>
+        <div className="relative flex-1 overflow-auto bg-[color:var(--bone)]">
+          <div className="w-full h-[550px] relative overflow-hidden">
+            {open && (
+              <Cal
+                namespace="1h"
+                calLink="endi-b3omc8/1h"
+                style={{ width: "100%", height: "100%", overflow: "scroll" }}
+                config={{ 
+                  layout: "month_view", 
+                  useSlotsViewOnSmallScreen: "true",
+                  theme: "light"
+                }}
+              />
+            )}
           </div>
-
-          {embedFailed && (
-            <div className="p-5 border-t border-[color:var(--hairline-light)]">
-              <p className="text-sm text-[color:var(--muted-on-light)] mb-3">
-                Our booking system didn't load. You can reach us directly:
-              </p>
-              <div className="flex flex-col gap-1 text-sm">
-                <a className="hover:text-[color:var(--ember)]" href={clinic.phoneLink}>
-                  Call {clinic.phone}
-                </a>
-                <a className="hover:text-[color:var(--ember)]" href={`mailto:${clinic.email}`}>
-                  Email {clinic.email}
-                </a>
-              </div>
-            </div>
-          )}
         </div>
       </div>
-
-      <style>{`@keyframes stride-shimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }`}</style>
     </div>
   );
 }

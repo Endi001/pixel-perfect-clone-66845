@@ -123,10 +123,7 @@ export function ExpressiveMenu({ open, onClose }: { open: boolean; onClose: () =
 
           <div className="mt-16 flex flex-wrap items-center gap-4">
             <button
-              onClick={() => { onClose(); }}
-              data-cal-namespace="1h"
-              data-cal-link="endi-b3omc8/1h"
-              data-cal-config='{"layout":"month_view","useSlotsViewOnSmallScreen":"true"}'
+              onClick={() => { onClose(); openModal(); }}
               className="bg-[color:var(--ember)] px-6 py-3 text-[color:var(--ember-foreground)] font-medium cursor-pointer"
               style={{ borderRadius: 3 }}
             >

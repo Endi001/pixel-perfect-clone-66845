@@ -30,20 +30,20 @@ export function ReturnCTA() {
     const prefersReduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     if (prefersReduced) return;
 
-      const tw = gsap.fromTo(
-        overlayRef.current,
-        { backgroundColor: "rgba(16, 17, 19, 0.55)" },
-        {
-          backgroundColor: "rgba(255, 158, 66, 0.28)",
-          ease: "none",
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: "top bottom",
-            end: "bottom top",
-            scrub: 0.8,
-          },
+    const tw = gsap.fromTo(
+      overlayRef.current,
+      { backgroundColor: "rgba(16, 17, 19, 0.55)" },
+      {
+        backgroundColor: "rgba(255, 158, 66, 0.28)",
+        ease: "none",
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top bottom",
+          end: "bottom top",
+          scrub: 0.8,
         },
-      );
+      },
+    );
 
     return () => {
       tw.scrollTrigger?.kill();
@@ -73,9 +73,7 @@ export function ReturnCTA() {
           </h2>
           <div className="mt-10 flex flex-wrap gap-3">
             <button
-              data-cal-namespace="1h"
-              data-cal-link="endi-b3omc8/1h"
-              data-cal-config='{"layout":"month_view","useSlotsViewOnSmallScreen":"true"}'
+              onClick={openModal}
               className="bg-[color:var(--ember)] px-6 py-3 text-[color:var(--ember-foreground)] font-medium cursor-pointer"
               style={{ borderRadius: 3 }}
             >

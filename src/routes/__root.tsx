@@ -14,7 +14,8 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { SiteNav } from "@/components/stride/SiteNav";
 import { Footer } from "@/components/stride/Footer";
 import { useLenis } from "@/hooks/use-lenis";
-import { getCalApi } from "@calcom/embed-react";
+import { BookingProvider } from "@/components/stride/booking-context";
+import { BookingModal } from "@/components/stride/BookingModal";
 
 function NotFoundComponent() {
   return (
@@ -147,20 +148,15 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
-      <AppShell />
+      <BookingProvider>
+        <AppShell />
+      </BookingProvider>
     </QueryClientProvider>
   );
 }
 
 function AppShell() {
   useLenis();
-  
-  useEffect(() => {
-    (async function () {
-      const cal = await getCalApi({ namespace: "1h" });
-      cal("ui", { hideEventTypeDetails: false, layout: "month_view" });
-    })();
-  }, []);
 
   return (
     <>
@@ -175,6 +171,7 @@ function AppShell() {
         <Outlet />
       </main>
       <Footer />
+      <BookingModal />
     </>
   );
 }

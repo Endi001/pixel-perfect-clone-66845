@@ -34,7 +34,7 @@ export function SiteNav() {
         className={[
           "fixed top-0 left-0 right-0 z-40 transition-colors duration-500",
           solid ? "bg-[color:var(--bone)] text-[color:var(--text-on-light)] border-b border-[color:var(--hairline-light)]"
-                : "bg-transparent text-[color:var(--text-on-dark)]",
+            : "bg-transparent text-[color:var(--text-on-dark)]",
         ].join(" ")}
         style={{ transitionTimingFunction: "var(--ease-drive)" }}
       >
@@ -76,9 +76,7 @@ export function SiteNav() {
 
           <div className="flex items-center gap-3">
             <button
-              data-cal-namespace="1h"
-              data-cal-link="endi-b3omc8/1h"
-              data-cal-config='{"layout":"month_view","useSlotsViewOnSmallScreen":"true"}'
+              onClick={openModal}
               className="hidden sm:inline-flex items-center gap-2 bg-[color:var(--ember)] px-4 py-2 text-sm text-[color:var(--ember-foreground)] font-medium hover:brightness-95 transition cursor-pointer"
               style={{ borderRadius: 3 }}
             >
