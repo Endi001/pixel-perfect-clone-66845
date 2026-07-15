@@ -76,7 +76,9 @@ export function SiteNav() {
 
           <div className="flex items-center gap-3">
             <button
-              onClick={openModal}
+              data-cal-namespace="1h"
+              data-cal-link="endi-b3omc8/1h"
+              data-cal-config='{"layout":"month_view","useSlotsViewOnSmallScreen":"true"}'
               className="hidden sm:inline-flex items-center gap-2 bg-[color:var(--ember)] px-4 py-2 text-sm text-[color:var(--ember-foreground)] font-medium hover:brightness-95 transition cursor-pointer"
               style={{ borderRadius: 3 }}
             >

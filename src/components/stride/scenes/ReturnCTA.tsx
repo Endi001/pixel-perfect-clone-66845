@@ -73,7 +73,9 @@ export function ReturnCTA() {
           </h2>
           <div className="mt-10 flex flex-wrap gap-3">
             <button
-              onClick={openModal}
+              data-cal-namespace="1h"
+              data-cal-link="endi-b3omc8/1h"
+              data-cal-config='{"layout":"month_view","useSlotsViewOnSmallScreen":"true"}'
               className="bg-[color:var(--ember)] px-6 py-3 text-[color:var(--ember-foreground)] font-medium cursor-pointer"
               style={{ borderRadius: 3 }}
             >
