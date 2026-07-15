@@ -45,7 +45,7 @@ function AboutPage() {
                   <div
                     className="absolute inset-0 bg-cover bg-center opacity-90 group-hover:opacity-100 group-hover:scale-[1.03] transition"
                     style={{
-                      backgroundImage: `url(https://images.pexels.com/photos/${["5327585","3762800","4269698"][i]}/pexels-photo-${["5327585","3762800","4269698"][i]}.jpeg?auto=compress&cs=tinysrgb&w=1200)`,
+                      backgroundImage: `url(https://images.pexels.com/photos/${["30423030","27684610","13831341"][i]}/pexels-photo-${["30423030","27684610","13831341"][i]}.jpeg?auto=compress&cs=tinysrgb&w=1200)`,
                       transitionDuration: "700ms",
                       transitionTimingFunction: "var(--ease-drive)",
                     }}

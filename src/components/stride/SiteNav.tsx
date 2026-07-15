@@ -4,6 +4,7 @@ import { ExpressiveMenu } from "./ExpressiveMenu";
 import { useBooking } from "./booking-context";
 
 const links = [
+  { to: "/", label: "Home" },
   { to: "/treatments", label: "Treatments" },
   { to: "/our-approach", label: "Our approach" },
   { to: "/about", label: "About" },
@@ -54,17 +55,19 @@ export function SiteNav() {
 
           <nav className="hidden md:flex items-center gap-8">
             {links.map((l) => {
-              const active = pathname.startsWith(l.to);
+              const active = l.to === "/" ? pathname === "/" : pathname.startsWith(l.to);
               return (
                 <Link
                   key={l.to}
                   to={l.to}
-                  className="relative text-sm tracking-wide"
+                  className="relative text-sm tracking-wide group"
                 >
                   {l.label}
                   <span
-                    className="absolute -bottom-1 left-0 h-[2px] bg-[color:var(--ember)] transition-transform origin-left"
-                    style={{ width: "100%", transform: active ? "scaleX(1)" : "scaleX(0)" }}
+                    className={[
+                      "absolute -bottom-1 left-0 h-[2px] w-full bg-[color:var(--ember)] transition-transform origin-left",
+                      active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+                    ].join(" ")}
                   />
                 </Link>
               );
@@ -74,7 +77,7 @@ export function SiteNav() {
           <div className="flex items-center gap-3">
             <button
               onClick={openModal}
-              className="hidden sm:inline-flex items-center gap-2 bg-[color:var(--ember)] px-4 py-2 text-sm text-[color:var(--ember-foreground)] font-medium hover:brightness-95 transition"
+              className="hidden sm:inline-flex items-center gap-2 bg-[color:var(--ember)] px-4 py-2 text-sm text-[color:var(--ember-foreground)] font-medium hover:brightness-95 transition cursor-pointer"
               style={{ borderRadius: 3 }}
             >
               Book
@@ -82,7 +85,7 @@ export function SiteNav() {
             <button
               onClick={() => setMenuOpen(true)}
               aria-label="Open menu"
-              className="flex flex-col justify-center items-end gap-[5px] p-2"
+              className="flex flex-col justify-center items-end gap-[5px] p-2 cursor-pointer"
             >
               <span className="block h-[1.5px] w-6 bg-current" />
               <span className="block h-[1.5px] w-4 bg-current" />

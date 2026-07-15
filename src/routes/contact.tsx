@@ -55,7 +55,7 @@ function ContactPage() {
             <div className="mt-10 flex flex-wrap gap-3">
               <button
                 onClick={openModal}
-                className="bg-[color:var(--ember)] px-6 py-3 text-[color:var(--ember-foreground)] font-medium"
+                className="bg-[color:var(--ember)] px-6 py-3 text-[color:var(--ember-foreground)] font-medium cursor-pointer"
                 style={{ borderRadius: 3 }}
               >
                 Book an assessment
@@ -71,25 +71,17 @@ function ContactPage() {
           </div>
 
           <div className="aspect-[4/3] bg-[color:var(--muted)] relative overflow-hidden">
-            <div className="absolute inset-0 opacity-70"
-              style={{
-                backgroundImage:
-                  "linear-gradient(var(--hairline-light) 1px, transparent 1px), linear-gradient(90deg, var(--hairline-light) 1px, transparent 1px)",
-                backgroundSize: "24px 24px",
-              }}
+            <iframe
+              title="Clinic Location"
+              src={`https://maps.google.com/maps?q=${encodeURIComponent(clinic.address)}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
+              width="100%"
+              height="100%"
+              style={{ border: 0, filter: "grayscale(100%) opacity(0.9) contrast(1.1)" }}
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              className="absolute inset-0"
             />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center">
-                <div className="eyebrow text-[color:var(--muted-on-light)]">Map</div>
-                <div className="mt-2 font-display text-3xl">Ashfield Quay</div>
-                <div className="mt-1 text-sm text-[color:var(--muted-on-light)]">{clinic.address}</div>
-              </div>
-            </div>
-            {/* Ember pin */}
-            <div className="absolute" style={{ left: "56%", top: "48%" }}>
-              <div className="w-3 h-3 bg-[color:var(--ember)]" style={{ borderRadius: 2 }} />
-              <div className="absolute inset-0 animate-ping bg-[color:var(--ember)]/60" style={{ borderRadius: 2 }} />
-            </div>
           </div>
         </div>
       </section>

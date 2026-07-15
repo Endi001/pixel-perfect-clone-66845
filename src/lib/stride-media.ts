@@ -23,8 +23,8 @@ export const stridemedia = {
     poster: "https://images.pexels.com/photos/4761791/pexels-photo-4761791.jpeg?auto=compress&cs=tinysrgb&w=1600",
   },
   biomechanics: {
-    // Men running on a trail at a marathon race
-    src: "https://images.pexels.com/photos/18408908/pexels-photo-18408908.jpeg?auto=compress&cs=tinysrgb&w=2000",
+    // Runner in urban marathon on city street
+    src: "https://images.pexels.com/photos/34277463/pexels-photo-34277463.jpeg?auto=compress&cs=tinysrgb&w=3840",
   },
   sunset: {
     src: "https://videos.pexels.com/video-files/4440942/4440942-hd_1920_1080_25fps.mp4"
@@ -33,8 +33,8 @@ export const stridemedia = {
 
 export const clinic = {
   name: "STRIDE Physiotherapy",
-  location: "Ashfield Quay",
-  address: "12 Regatta Walk, Ashfield Quay",
+  location: "Amsterdam Centrum",
+  address: "Dam Square 1, 1012 NP Amsterdam",
   phone: "(555) 018-2044",
   phoneLink: "tel:+15550182044",
   email: "hello@stridephysio.example",
@@ -47,9 +47,9 @@ export const clinic = {
   heroSub:
     "We treat pain, rebuild movement, and get you back to full speed — whatever speed means for you.",
   team: [
-    { name: "Elena Marsh", role: "Lead Physiotherapist", cred: "MSc Sports Rehabilitation" },
+    { name: "James Carter", role: "Lead Physiotherapist", cred: "MSc Sports Rehabilitation" },
     { name: "Tom Okafor", role: "Physiotherapist", cred: "Manual Therapy Lead" },
-    { name: "Priya Anand", role: "Physiotherapist", cred: "Post-Operative Rehabilitation" },
+    { name: "Sarah Jenkins", role: "Physiotherapist", cred: "Post-Operative Rehabilitation" },
   ],
   services: [
     { n: "01", name: "Back pain", desc: "Persistent low-back and thoracic pain, disc-related symptoms, and post-flare rehabilitation." },

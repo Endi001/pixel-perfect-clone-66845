@@ -105,9 +105,11 @@ export function ExpressiveMenu({ open, onClose }: { open: boolean; onClose: () =
                     <span className="font-display text-[clamp(2.5rem,8vw,7rem)] leading-[0.9] tracking-tight relative">
                       {it.label}
                       <span
-                        className="absolute left-0 right-0 -bottom-1 h-[3px] bg-[color:var(--ember)] origin-left transition-transform"
+                        className={[
+                          "absolute left-0 right-0 -bottom-1 h-[3px] bg-[color:var(--ember)] origin-left transition-transform",
+                          active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+                        ].join(" ")}
                         style={{
-                          transform: active ? "scaleX(1)" : "scaleX(0)",
                           transitionDuration: "400ms",
                           transitionTimingFunction: "var(--ease-drive)",
                         }}
@@ -122,7 +124,7 @@ export function ExpressiveMenu({ open, onClose }: { open: boolean; onClose: () =
           <div className="mt-16 flex flex-wrap items-center gap-4">
             <button
               onClick={() => { onClose(); openModal(); }}
-              className="bg-[color:var(--ember)] px-6 py-3 text-[color:var(--ember-foreground)] font-medium"
+              className="bg-[color:var(--ember)] px-6 py-3 text-[color:var(--ember-foreground)] font-medium cursor-pointer"
               style={{ borderRadius: 3 }}
             >
               Book an assessment

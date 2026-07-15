@@ -9,22 +9,25 @@ type Stop = {
   label: string;
   // Focal point on the image (0-100). The pan centers this point.
   fx: number; fy: number; scale: number;
+  // Optional custom pan target (if you want the marker offset from the center of the screen)
+  px?: number; py?: number;
   // Motion trail arc coords (relative to marker), in the un-scaled image space.
   trail: { x1: number; y1: number; cx: number; cy: number; x2: number; y2: number };
 };
 
 const stops: Stop[] = [
   {
-    label: "GROUND CONTACT", fx: 42, fy: 88, scale: 2.2,
-    trail: { x1: 8, y1: -30, cx: 30, cy: -60, x2: 60, y2: -20 }
+    label: "GROUND CONTACT", fx: 51, fy: 80, scale: 1.5, py: 72, // Zoomed out more and panned slightly up so ground and hip fit
+    trail: { x1: 0, y1: 0, cx: 30, cy: -15, x2: 70, y2: -25 }
   },
   {
-    label: "HIP EXTENSION", fx: 46, fy: 48, scale: 2.0,
-    trail: { x1: -40, y1: 10, cx: -20, cy: -30, x2: 20, y2: -10 }
+    label: "HIP EXTENSION", fx: 48, fy: 58, scale: 2.0, py: 52, // Pans to 52%, leaving the hip at 58% lower on the screen
+    trail: { x1: 0, y1: 0, cx: 30, cy: -15, x2: 70, y2: -25 }
   },
   {
-    label: "SHOULDER DRIVE", fx: 45, fy: 25, scale: 2.2,
-    trail: { x1: 30, y1: -10, cx: 0, cy: -40, x2: -50, y2: -20 }
+    label: "SHOULDER DRIVE", fx: 48, fy: 44, scale: 2.2,
+    // Mirrored to the left side
+    trail: { x1: 0, y1: 0, cx: -30, cy: -15, x2: -70, y2: -25 }
   },
 ];
 
@@ -40,8 +43,8 @@ const stops: Stop[] = [
 function panFor(s: Stop) {
   return {
     scale: s.scale,
-    xPercent: -(s.fx - 50),
-    yPercent: -(s.fy - 50),
+    xPercent: -((s.px ?? s.fx) - 50),
+    yPercent: -((s.py ?? s.fy) - 50),
   };
 }
 
@@ -112,12 +115,18 @@ export function Biomechanics() {
       aria-label="Biomechanics freeze-frame"
       className="stride-section-dark relative h-[100svh] overflow-hidden"
     >
-      <div className="absolute inset-0 overflow-hidden">
-        {/* Stage — image + markers share this transform so markers track anatomy */}
+      {/* We flex-center the stage so that as it overscales the window, it remains perfectly centered */}
+      <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+        {/* Stage — locks proportion to ensure markers never drift from the image content. */}
+        {/* Assuming a 16:9 ratio where the coordinates were originally plotted. */}
         <div
           ref={stageRef}
-          className="absolute inset-0 will-change-transform"
-          style={{ transformOrigin: "50% 50%" }}
+          className="relative will-change-transform flex-shrink-0"
+          style={{
+            width: "max(100vw, 100vh * (16/9))",
+            height: "max(100vh, 100vw / (16/9))",
+            transformOrigin: "50% 50%"
+          }}
         >
           <img
             src={stridemedia.biomechanics.src}
@@ -125,6 +134,7 @@ export function Biomechanics() {
             className="w-full h-full object-cover select-none"
             draggable={false}
           />
+          {/* Dark overlay moved INSIDE the stage, BEFORE markers, so markers stay bright */}
           <div className="absolute inset-0 bg-[color:var(--ink)]/35 pointer-events-none" />
 
           {stops.map((s, i) => (
@@ -140,11 +150,11 @@ export function Biomechanics() {
               >
                 <div
                   className="w-8 h-8 rounded-full border-[1.5px]"
-                  style={{ borderColor: "var(--slate)" }}
+                  style={{ borderColor: "white" }}
                 />
                 <div
                   className="absolute inset-0 m-auto w-[3px] h-[3px] rounded-full"
-                  style={{ background: "var(--slate)" }}
+                  style={{ background: "white" }}
                 />
                 <svg
                   className="absolute -translate-x-1/2 -translate-y-1/2 left-1/2 top-1/2 overflow-visible"
@@ -154,7 +164,7 @@ export function Biomechanics() {
                   <path
                     d={`M ${s.trail.x1} ${s.trail.y1} Q ${s.trail.cx} ${s.trail.cy} ${s.trail.x2} ${s.trail.y2}`}
                     fill="none"
-                    stroke="var(--slate)"
+                    stroke="white"
                     strokeWidth="1"
                     strokeDasharray="3 4"
                   />
@@ -162,14 +172,25 @@ export function Biomechanics() {
               </div>
 
               <div
-                ref={(el) => { labelRefs.current[i] = el; }}
-                className="absolute font-mono-tech text-[0.7rem] uppercase tracking-[0.18em] whitespace-nowrap"
+                className="absolute"
                 style={{
-                  color: "var(--slate)",
-                  left: 24, top: -6, opacity: 0, transform: "translateX(-6px)",
+                  left: s.trail.x2 + (s.trail.x2 < 0 ? -8 : 8),
+                  top: s.trail.y2,
                 }}
               >
-                {s.label}
+                <div style={{ transform: s.trail.x2 < 0 ? "translate(-100%, -50%)" : "translateY(-50%)" }}>
+                  <div
+                    ref={(el) => { labelRefs.current[i] = el; }}
+                    className="font-mono-tech text-[0.7rem] uppercase tracking-[0.18em] whitespace-nowrap"
+                    style={{
+                      color: "white",
+                      opacity: 0,
+                      transform: `translateX(${s.trail.x2 < 0 ? '6px' : '-6px'})`,
+                    }}
+                  >
+                    {s.label}
+                  </div>
+                </div>
               </div>
             </div>
           ))}

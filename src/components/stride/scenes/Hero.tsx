@@ -141,7 +141,7 @@ export function Hero() {
         <div className="flex flex-wrap gap-3">
           <button
             onClick={openModal}
-            className="bg-[color:var(--ember)] px-5 py-3 text-[color:var(--ember-foreground)] font-medium"
+            className="bg-[color:var(--ember)] px-5 py-3 text-[color:var(--ember-foreground)] font-medium cursor-pointer"
             style={{ borderRadius: 3 }}
           >
             Book an assessment

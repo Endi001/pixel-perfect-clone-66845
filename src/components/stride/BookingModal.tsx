@@ -83,7 +83,7 @@ export function BookingModal() {
             ref={closeRef}
             onClick={closeModal}
             aria-label="Close"
-            className="eyebrow px-2 py-1"
+            className="eyebrow px-2 py-1 cursor-pointer"
           >
             Close ×
           </button>
