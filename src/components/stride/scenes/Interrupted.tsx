@@ -38,7 +38,7 @@ export function Interrupted() {
           <div>
             <div className="eyebrow text-[color:var(--muted-on-dark)] mb-4">— beat —</div>
             <p className="font-display text-[clamp(1.75rem,4.5vw,3.75rem)] leading-tight max-w-3xl">
-              Then something stops working.
+              When something stops working, we're there to help.
             </p>
           </div>
         </div>
