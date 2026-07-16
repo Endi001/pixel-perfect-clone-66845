@@ -1,18 +1,59 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useBooking } from "./booking-context";
-import { clinic } from "@/lib/stride-media";
-import Cal, { getCalApi } from "@calcom/embed-react";
+import { Calendar } from "@/components/ui/calendar";
+import { format, startOfDay, endOfDay } from "date-fns";
+import { getCalSlots, createCalBooking, getCalEventDetails } from "@/lib/cal-api";
+import PhoneInput from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
+import Select from 'react-select';
 
 export function BookingModal() {
   const { open, closeModal } = useBooking();
+  const [step, setStep] = useState(1);
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
 
+  // Event Details State
+  const [eventDetails, setEventDetails] = useState<{
+    id: number;
+    title: string;
+    description: string;
+    length: number;
+    location: string;
+    bookingFields?: any[];
+  } | null>(null);
+
+  // Booking State
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [slots, setSlots] = useState<{ time: string }[]>([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [bookingLoading, setBookingLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Form State
+  const [formResponses, setFormResponses] = useState<Record<string, any>>({});
+
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      setStep(1);
+      setSelectedDate(new Date());
+      setSelectedTime(null);
+      setFormResponses({});
+      setError(null);
+      return;
+    }
+
     const prev = document.activeElement as HTMLElement | null;
     closeRef.current?.focus();
     document.body.style.overflow = "hidden";
+
+    // Fetch Event Details
+    if (!eventDetails) {
+      getCalEventDetails({ data: { eventTypeSlug: "1h" } })
+        .then((res) => setEventDetails(res))
+        .catch(console.error);
+    }
 
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") closeModal();
@@ -28,33 +69,71 @@ export function BookingModal() {
     };
     document.addEventListener("keydown", onKey);
 
-    // Initialize Cal UI configuration with STRIDE branding
-    (async function () {
-      const cal = await getCalApi({ namespace: "1h" });
-      cal("ui", { 
-        hideEventTypeDetails: false, 
-        layout: "month_view",
-        theme: "light",
-        cssVarsPerTheme: {
-          light: {
-            "cal-brand": "#FF5A36",
-            "cal-text": "#14151A",
-            "cal-bg": "#F5F3EF",
-            "cal-border": "#D6D2C9",
-            "cal-muted": "#6f6d67"
-          },
-          dark: {} // Required by TS
-        },
-        styles: { branding: { brandColor: "#FF5A36" } }
-      });
-    })();
-
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
       prev?.focus?.();
     };
-  }, [open, closeModal]);
+  }, [open, closeModal, eventDetails]);
+
+  useEffect(() => {
+    if (step === 1 && selectedDate && eventDetails) {
+      setLoadingSlots(true);
+      setError(null);
+      
+      const start = startOfDay(selectedDate).toISOString();
+      const end = endOfDay(selectedDate).toISOString();
+
+      getCalSlots({ data: { start, end, eventTypeId: eventDetails.id } })
+        .then((res) => {
+          setSlots(res || []);
+        })
+        .catch((err) => {
+          console.error(err);
+          setError("Failed to load available times.");
+        })
+        .finally(() => {
+          setLoadingSlots(false);
+        });
+    }
+  }, [step, selectedDate, eventDetails]);
+
+  const handleConfirmBooking = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedTime) return;
+
+    setBookingLoading(true);
+    setError(null);
+
+    // Map the standard fields
+    const name = formResponses["name"] || "";
+    const email = formResponses["email"] || "";
+    const notes = formResponses["notes"] || formResponses["rescheduleReason"] || "";
+
+    // Pluck standard fields out, leaving only the custom responses
+    const customResponses = { ...formResponses };
+    delete customResponses["name"];
+    delete customResponses["email"];
+    delete customResponses["notes"];
+
+    try {
+      await createCalBooking({
+        data: {
+          start: selectedTime,
+          name,
+          email,
+          notes,
+          responses: customResponses,
+        },
+      });
+      setStep(3); // Go to confirmation page
+    } catch (err) {
+      console.error(err);
+      setError("Failed to create booking. Please try again.");
+    } finally {
+      setBookingLoading(false);
+    }
+  };
 
   return (
     <div
@@ -65,11 +144,10 @@ export function BookingModal() {
       ].join(" ")}
       style={{ transitionDuration: "220ms", transitionTimingFunction: "var(--ease-strike)" }}
     >
-      {/* Backdrop */}
       <button
         aria-label="Close booking dialog"
         onClick={closeModal}
-        className="absolute inset-0 bg-[color:var(--ink)]/70 backdrop-blur-sm"
+        className="absolute inset-0 bg-[color:var(--ink)]/70 backdrop-blur-sm transition-opacity duration-300"
       />
       <div
         ref={dialogRef}
@@ -79,47 +157,322 @@ export function BookingModal() {
         className={[
           "absolute bg-[color:var(--bone)] text-[color:var(--text-on-light)]",
           "left-0 right-0 bottom-0 top-16 md:top-1/2 md:left-1/2 md:right-auto md:bottom-auto md:-translate-x-1/2 md:-translate-y-1/2",
-          "md:w-[480px] md:max-h-[85vh] w-full",
-          "flex flex-col",
+          "w-full md:max-h-[85vh]",
+          step === 1 ? "md:w-[840px]" : "md:w-[480px]",
+          "flex flex-col shadow-2xl transition-all duration-300",
         ].join(" ")}
         style={{
-          borderRadius: 4,
-          transform: open ? undefined : "scale(0.98)",
-          transition: "transform 220ms var(--ease-strike)",
+          borderRadius: 8,
+          transform: open ? undefined : "scale(0.98) translate(-50%, -50%)", // translate is needed because of md:-translate-x-1/2
+          transformOrigin: "center center",
         }}
       >
-        <span id="booking-title" className="sr-only">Book an assessment</span>
-
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[color:var(--hairline-light)]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[color:var(--hairline-light)] shrink-0">
           <div>
-            <div className="eyebrow text-[color:var(--muted-on-light)]">Book</div>
-            <div className="font-display text-2xl leading-none mt-1">An assessment</div>
+            <div className="eyebrow text-[color:var(--muted-on-light)] text-xs uppercase tracking-wider font-semibold">Book</div>
+            <div className="font-display text-xl leading-none mt-1">An assessment</div>
           </div>
           <button
             ref={closeRef}
             onClick={closeModal}
             aria-label="Close"
-            className="eyebrow px-2 py-1 cursor-pointer"
+            className="text-[color:var(--muted-on-light)] hover:text-[color:var(--ink)] transition-colors p-2"
           >
-            Close ×
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
           </button>
         </div>
 
-        <div className="relative flex-1 overflow-auto bg-[color:var(--bone)]">
-          <div className="w-full h-[550px] relative overflow-hidden">
-            {open && (
-              <Cal
-                namespace="1h"
-                calLink="endi-b3omc8/1h"
-                style={{ width: "100%", height: "100%", overflow: "scroll" }}
-                config={{ 
-                  layout: "month_view", 
-                  useSlotsViewOnSmallScreen: "true",
-                  theme: "light"
-                }}
-              />
-            )}
-          </div>
+        <div className="relative flex-1 overflow-y-auto overflow-x-hidden bg-[color:var(--bone)]">
+          {step === 1 && (
+            <div className="flex flex-col md:flex-row h-full min-h-[500px]">
+              {/* Left Panel: Intro */}
+              <div className="p-8 md:w-[320px] border-b md:border-b-0 md:border-r border-[color:var(--hairline-light)] bg-white/50 shrink-0">
+                {eventDetails ? (
+                  <>
+                    <h3 className="font-display text-2xl mb-4">{eventDetails.title}</h3>
+                    <div 
+                      className="text-[color:var(--muted-on-light)] mb-8 text-sm leading-relaxed"
+                      dangerouslySetInnerHTML={{ __html: eventDetails.description }}
+                    />
+                    
+                    <div className="flex flex-col gap-3 text-sm">
+                      <div className="flex items-center gap-3">
+                        <svg className="w-5 h-5 text-[color:var(--muted-on-light)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span className="font-medium">{eventDetails.length} mins</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <svg className="w-5 h-5 text-[color:var(--muted-on-light)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        <span className="font-medium">{eventDetails.location}</span>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="animate-pulse space-y-4">
+                    <div className="h-6 bg-[color:var(--hairline-light)] rounded w-3/4"></div>
+                    <div className="h-4 bg-[color:var(--hairline-light)] rounded w-full"></div>
+                    <div className="h-4 bg-[color:var(--hairline-light)] rounded w-full"></div>
+                    <div className="h-4 bg-[color:var(--hairline-light)] rounded w-5/6"></div>
+                  </div>
+                )}
+              </div>
+
+              {/* Right Panel: Calendar & Time */}
+              <div className="p-8 flex-1 flex flex-col items-center">
+                <h3 className="font-display text-xl mb-6 w-full text-left">Select a Date & Time</h3>
+                <div className="w-full flex justify-center mb-8 border border-[color:var(--hairline-light)] p-4 rounded-xl bg-white shadow-sm">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={(date) => {
+                      setSelectedDate(date);
+                      setSelectedTime(null);
+                    }}
+                    disabled={(date) => date < startOfDay(new Date())}
+                    className="rounded-md"
+                  />
+                </div>
+
+                <div className="w-full mb-8">
+                  <div className="font-medium mb-4 text-sm text-[color:var(--muted-on-light)] uppercase tracking-wider">
+                    Available times for {selectedDate ? format(selectedDate, "MMM d, yyyy") : ""}
+                  </div>
+                  {loadingSlots ? (
+                    <div className="text-[color:var(--muted-on-light)] text-sm animate-pulse">Checking availability...</div>
+                  ) : slots.length === 0 ? (
+                    <div className="text-[color:var(--muted-on-light)] text-sm italic">No slots available on this date.</div>
+                  ) : (
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                      {slots.map((slot, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setSelectedTime(slot.time)}
+                          className={`py-2 text-sm font-medium border rounded-md transition-all ${
+                            selectedTime === slot.time
+                              ? "bg-[color:var(--ember)] text-[color:var(--ember-foreground)] border-[color:var(--ember)] ring-2 ring-[color:var(--ember)] ring-offset-1"
+                              : "border-[color:var(--hairline-light)] bg-white hover:border-[color:var(--ink)]"
+                          }`}
+                        >
+                          {format(new Date(slot.time), "HH:mm")}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {error && <div className="text-red-500 mb-4 text-sm bg-red-50 p-3 rounded">{error}</div>}
+
+                <div className="mt-auto w-full pt-4 border-t border-[color:var(--hairline-light)]">
+                  <button
+                    onClick={() => setStep(2)}
+                    disabled={!selectedTime}
+                    className="bg-[color:var(--ember)] px-6 py-3 text-[color:var(--ember-foreground)] font-medium cursor-pointer w-full hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed rounded-md shadow-sm"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {step === 2 && (
+            <div className="p-8 flex flex-col h-full text-left min-h-[500px] bg-white">
+              <h3 className="font-display text-2xl mb-2">Your Details</h3>
+              <div className="text-[color:var(--muted-on-light)] mb-8 pb-6 border-b border-[color:var(--hairline-light)] text-sm">
+                You selected <span className="font-medium text-[color:var(--ink)]">{selectedTime && format(new Date(selectedTime), "EEEE, MMMM d, yyyy 'at' HH:mm")}</span>
+              </div>
+
+              <form onSubmit={handleConfirmBooking} className="flex flex-col gap-5 flex-1 overflow-visible">
+                {eventDetails?.bookingFields && eventDetails.bookingFields.length > 0 ? (
+                  eventDetails.bookingFields.map((field, i) => {
+                    const fieldName = field.slug || `field_${i}`;
+                    const isRequired = field.required !== false && field.hidden !== true;
+                    
+                    if (field.hidden || field.type === "radioInput") return null;
+
+                    let displayLabel = field.label || "";
+                    if (!displayLabel) {
+                      if (fieldName === "name") displayLabel = "Full Name";
+                      else if (fieldName === "email") displayLabel = "Email Address";
+                      else if (fieldName === "attendeePhoneNumber") displayLabel = "Phone Number";
+                      else displayLabel = fieldName;
+                    }
+
+                    return (
+                      <div key={fieldName}>
+                        <label className="block text-sm font-semibold mb-1.5 text-[color:var(--ink)]">
+                          {displayLabel} {isRequired && "*"}
+                        </label>
+                        {field.type === "textarea" ? (
+                          <textarea
+                            required={isRequired}
+                            placeholder={field.placeholder || ""}
+                            value={formResponses[fieldName] || ""}
+                            onChange={(e) => setFormResponses((prev) => ({ ...prev, [fieldName]: e.target.value }))}
+                            rows={4}
+                            className="w-full border border-[color:var(--hairline-dark-strong)] rounded-md px-4 py-2.5 outline-none focus:border-[color:var(--ember)] focus:ring-1 focus:ring-[color:var(--ember)] transition-all resize-none bg-[color:var(--bone)]"
+                          />
+                        ) : field.type === "boolean" || field.type === "checkbox" ? (
+                          <div className="flex items-center gap-3 mt-2">
+                            <input
+                              type="checkbox"
+                              required={isRequired}
+                              checked={!!formResponses[fieldName]}
+                              onChange={(e) => setFormResponses((prev) => ({ ...prev, [fieldName]: e.target.checked }))}
+                              className="w-5 h-5 accent-[color:var(--ember)]"
+                            />
+                            <span className="text-sm">{displayLabel}</span>
+                          </div>
+                        ) : field.type === "select" || field.type === "multiselect" || field.type === "radio" ? (
+                          <Select
+                            isMulti={field.type === "multiselect"}
+                            placeholder={field.placeholder || "Select..."}
+                            options={field.options?.map((opt: any) => ({
+                              value: typeof opt === 'object' ? opt.value || opt.label : opt,
+                              label: typeof opt === 'object' ? opt.label || opt.value : opt,
+                            }))}
+                            value={
+                              field.options
+                                ? field.options
+                                    .map((opt: any) => ({
+                                      value: typeof opt === 'object' ? opt.value || opt.label : opt,
+                                      label: typeof opt === 'object' ? opt.label || opt.value : opt,
+                                    }))
+                                    .filter((o: any) => 
+                                      field.type === "multiselect" 
+                                        ? (formResponses[fieldName] || []).includes(o.value)
+                                        : formResponses[fieldName] === o.value
+                                    )
+                                : null
+                            }
+                            onChange={(selected: any) => {
+                              if (field.type === "multiselect") {
+                                setFormResponses((prev) => ({ ...prev, [fieldName]: selected ? selected.map((s: any) => s.value) : [] }));
+                              } else {
+                                setFormResponses((prev) => ({ ...prev, [fieldName]: selected ? selected.value : "" }));
+                              }
+                            }}
+                            classNames={{
+                              control: () => "w-full border border-[color:var(--hairline-dark-strong)] rounded-md py-0.5 outline-none focus-within:border-[color:var(--ember)] focus-within:ring-1 focus-within:ring-[color:var(--ember)] transition-all bg-[color:var(--bone)] shadow-none",
+                            }}
+                            styles={{
+                              control: (base) => ({ ...base, border: "none", boxShadow: "none", backgroundColor: "transparent" }),
+                              menu: (base) => ({ ...base, zIndex: 100 })
+                            }}
+                          />
+                        ) : field.type === "phone" ? (
+                          <PhoneInput
+                            placeholder={field.placeholder || "Enter phone number"}
+                            value={formResponses[fieldName]}
+                            onChange={(value) => setFormResponses((prev) => ({ ...prev, [fieldName]: value }))}
+                            className="w-full border border-[color:var(--hairline-dark-strong)] rounded-md px-4 py-2 outline-none focus-within:border-[color:var(--ember)] focus-within:ring-1 focus-within:ring-[color:var(--ember)] transition-all bg-[color:var(--bone)] [&_.PhoneInputInput]:bg-transparent [&_.PhoneInputInput]:border-none [&_.PhoneInputInput]:outline-none [&_.PhoneInputInput]:min-h-[26px]"
+                          />
+                        ) : (
+                          <input
+                            required={isRequired}
+                            placeholder={field.placeholder || ""}
+                            type={field.type === "email" ? "email" : "text"}
+                            value={formResponses[fieldName] || ""}
+                            onChange={(e) => setFormResponses((prev) => ({ ...prev, [fieldName]: e.target.value }))}
+                            className="w-full border border-[color:var(--hairline-dark-strong)] rounded-md px-4 py-2.5 outline-none focus:border-[color:var(--ember)] focus:ring-1 focus:ring-[color:var(--ember)] transition-all bg-[color:var(--bone)]"
+                          />
+                        )}
+                      </div>
+                    );
+                  })
+                ) : (
+                  <>
+                    <div>
+                      <label className="block text-sm font-semibold mb-1.5 text-[color:var(--ink)]">Full Name *</label>
+                      <input
+                        required
+                        type="text"
+                        value={formResponses["name"] || ""}
+                        onChange={(e) => setFormResponses((prev) => ({ ...prev, name: e.target.value }))}
+                        className="w-full border border-[color:var(--hairline-dark-strong)] rounded-md px-4 py-2.5 outline-none focus:border-[color:var(--ember)] focus:ring-1 focus:ring-[color:var(--ember)] transition-all bg-[color:var(--bone)]"
+                        placeholder="Jane Doe"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold mb-1.5 text-[color:var(--ink)]">Email Address *</label>
+                      <input
+                        required
+                        type="email"
+                        value={formResponses["email"] || ""}
+                        onChange={(e) => setFormResponses((prev) => ({ ...prev, email: e.target.value }))}
+                        className="w-full border border-[color:var(--hairline-dark-strong)] rounded-md px-4 py-2.5 outline-none focus:border-[color:var(--ember)] focus:ring-1 focus:ring-[color:var(--ember)] transition-all bg-[color:var(--bone)]"
+                        placeholder="jane@example.com"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold mb-1.5 text-[color:var(--ink)]">Additional Notes</label>
+                      <textarea
+                        value={formResponses["notes"] || ""}
+                        onChange={(e) => setFormResponses((prev) => ({ ...prev, notes: e.target.value }))}
+                        rows={4}
+                        className="w-full border border-[color:var(--hairline-dark-strong)] rounded-md px-4 py-2.5 outline-none focus:border-[color:var(--ember)] focus:ring-1 focus:ring-[color:var(--ember)] transition-all resize-none bg-[color:var(--bone)]"
+                        placeholder="Please share anything that will help prepare for our meeting."
+                      />
+                    </div>
+                  </>
+                )}
+
+                {error && <div className="text-red-500 text-sm mt-2 bg-red-50 p-3 rounded">{error}</div>}
+
+                <div className="mt-auto flex gap-3 pt-6">
+                  <button
+                    type="button"
+                    onClick={() => setStep(1)}
+                    className="px-6 py-3 border border-[color:var(--hairline-dark-strong)] rounded-md font-medium hover:bg-[color:var(--bone)] transition-colors"
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={bookingLoading}
+                    className="flex-1 bg-[color:var(--ember)] px-6 py-3 text-[color:var(--ember-foreground)] font-medium cursor-pointer rounded-md hover:opacity-90 transition-opacity disabled:opacity-50 shadow-sm"
+                  >
+                    {bookingLoading ? "Confirming..." : "Confirm Booking"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {step === 3 && (
+            <div className="p-10 flex flex-col h-full items-center justify-center text-center min-h-[500px] bg-white">
+              <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-8">
+                <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h3 className="font-display text-3xl mb-4 text-[color:var(--ink)]">Booking Confirmed!</h3>
+              <p className="text-[color:var(--muted-on-light)] mb-2 text-lg">
+                Your assessment has been scheduled.
+              </p>
+              <div className="bg-[color:var(--bone)] px-6 py-4 rounded-md mb-10 w-full max-w-sm border border-[color:var(--hairline-light)]">
+                <p className="font-semibold text-[color:var(--ink)] text-lg">
+                  {selectedTime && format(new Date(selectedTime), "EEEE, MMMM d, yyyy")}
+                </p>
+                <p className="text-[color:var(--muted-on-light)] mt-1">
+                  {selectedTime && format(new Date(selectedTime), "HH:mm")}
+                </p>
+              </div>
+
+              <button
+                onClick={closeModal}
+                className="bg-[color:var(--ember)] px-8 py-3 text-[color:var(--ember-foreground)] font-medium cursor-pointer w-full hover:opacity-90 transition-opacity rounded-md shadow-sm"
+              >
+                Done
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

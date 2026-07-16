@@ -27,6 +27,19 @@ This plan outlines the steps for integrating a Cal.com booking modal into the ap
 - `[x]` 1. **Confirm Approach:** Embed inline within the existing `BookingModal.tsx` as confirmed to keep custom animations.
 - `[x]` 2. **Install Package:** Installed `@calcom/embed-react`.
 - `[x]` 3. **Implement Logic:** Modified `src/components/stride/BookingModal.tsx` to render the `<Cal>` component from `@calcom/embed-react` instead of the Calendly skeleton placeholder. Left all global buttons exactly as they were (`onClick={openModal}`) to trigger the beautiful animated custom modal wrapper.
-- `[x]` 4. **Apply Styling:** Inherited the styled `BookingModal.tsx` wrapper and passed custom `config={{ styles: { branding: { brandColor: "#FF5A36" } } }}` to the Cal component to perfectly match the site's `--ember` primary color.
+- `[x]` 4. **Apply Styling & Layout:** Inherited the styled `BookingModal.tsx` wrapper and passed custom `config` to the Cal component. We applied `--ember` primary color for branding and left `hideEventTypeDetails: false` to ensure the Cal.com Intro page is visible.
 - `[x]` 5. **Clean Up:** Removed the simulated `embedFailed` fallback logic.
-- `[x]` 6. **Test Validation:** The calendar will now render fully interactive in the modal with correct custom animations and branding.
+- `[x]` 6. **Test Validation:** The calendar will now render fully interactive in the modal, providing maximum vertical space for the hours list, with correct custom animations and branding.
+
+## Part 2: Custom API Booking Flow
+
+To achieve precise layout control (specifically, showing the Intro panel on the Calendar page but hiding it on the Form page), we replaced the native Cal.com embedded widget with a fully custom React state machine powered by the Cal.com v2 REST API.
+
+### Architecture Overview:
+1. **Server Proxy (`src/lib/cal-api.ts`):**
+   - Implemented `getCalEventDetails` to dynamically fetch the Intro content (Title, Description, Duration, Location) from Cal.com, ensuring the text is never out of sync.
+   - Implemented `getCalSlots` and `createCalBooking` to safely proxy scheduling requests without exposing the API key to the client.
+2. **State Machine (`src/components/stride/BookingModal.tsx`):**
+   - **Step 1 (Split-Screen):** Fetches and displays the Intro dynamically on the left. Renders a custom calendar (`react-day-picker`) and available time slots on the right.
+   - **Step 2 (Focused Form):** Hides the Intro panel completely. Displays only the booking intake form (Name, Email, Notes).
+   - **Step 3 (Confirmation):** Success screen displaying the confirmed time.
