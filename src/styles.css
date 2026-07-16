@@ -148,3 +148,29 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Booking form phone input — match STRIDE input styling */
+.booking-phone-input {
+  --PhoneInput-color--focus: var(--ember);
+  --PhoneInputCountrySelectArrow-color: var(--muted-on-light);
+  --PhoneInputCountrySelectArrow-color--focus: var(--ember);
+  --PhoneInputCountryFlag-borderColor--focus: var(--ember);
+}
+
+.booking-phone-input .PhoneInputCountry {
+  margin-right: 0.5em;
+}
+
+.booking-phone-input .PhoneInputInput {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--text-on-light);
+}
+
+.booking-phone-input .PhoneInputInput::placeholder {
+  color: var(--muted-on-light);
+}
+
+.booking-phone-input .PhoneInputCountrySelect:focus + .PhoneInputCountryIcon--border {
+  box-shadow: 0 0 0 1px var(--ember), inset 0 0 0 1px var(--ember);
+}

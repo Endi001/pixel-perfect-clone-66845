@@ -7,6 +7,41 @@ import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import Select from 'react-select';
 
+const BOOKING_INPUT_CLASS =
+  "w-full border border-[color:var(--hairline-dark-strong)] rounded-md px-4 py-2.5 outline-none focus:border-[color:var(--ember)] focus:ring-1 focus:ring-[color:var(--ember)] transition-all bg-[color:var(--bone)]";
+
+const BOOKING_COMPOSITE_INPUT_CLASS =
+  "w-full border border-[color:var(--hairline-dark-strong)] rounded-md px-4 py-2.5 outline-none focus-within:border-[color:var(--ember)] focus-within:ring-1 focus-within:ring-[color:var(--ember)] transition-all bg-[color:var(--bone)]";
+
+const BOOKING_SELECT_CLASSNAMES = {
+  control: () => `${BOOKING_COMPOSITE_INPUT_CLASS} shadow-none min-h-[42px]`,
+  valueContainer: () => "px-0 py-0 gap-1",
+  placeholder: () => "text-[color:var(--muted-on-light)] text-sm",
+  singleValue: () => "text-[color:var(--text-on-light)] text-sm",
+  input: () => "text-[color:var(--text-on-light)] text-sm m-0 p-0",
+  multiValue: () => "bg-[color:var(--hairline-light)] rounded text-sm",
+  multiValueLabel: () => "text-[color:var(--text-on-light)] text-sm px-1",
+  multiValueRemove: () => "text-[color:var(--muted-on-light)] hover:text-[color:var(--ink)] hover:bg-transparent rounded",
+  menu: () => "bg-[color:var(--bone)] border border-[color:var(--hairline-dark-strong)] rounded-md shadow-lg mt-1 overflow-hidden",
+  menuList: () => "py-1",
+  option: ({ isFocused, isSelected }: { isFocused: boolean; isSelected: boolean }) =>
+    [
+      "px-3 py-2 text-sm cursor-pointer",
+      isSelected ? "bg-[color:var(--ember)] text-[color:var(--ember-foreground)]" : "",
+      isFocused && !isSelected ? "bg-[color:var(--hairline-light)] text-[color:var(--text-on-light)]" : "",
+      !isFocused && !isSelected ? "text-[color:var(--text-on-light)]" : "",
+    ].join(" "),
+  indicatorSeparator: () => "hidden",
+  dropdownIndicator: () => "text-[color:var(--muted-on-light)] p-2",
+  clearIndicator: () => "text-[color:var(--muted-on-light)] p-2 hover:text-[color:var(--ink)]",
+};
+
+const BOOKING_SELECT_STYLES = {
+  control: (base: object) => ({ ...base, border: "none", boxShadow: "none", backgroundColor: "transparent", minHeight: "unset" }),
+  menu: (base: object) => ({ ...base, zIndex: 100 }),
+  menuPortal: (base: object) => ({ ...base, zIndex: 100 }),
+};
+
 export function BookingModal() {
   const { open, closeModal } = useBooking();
   const [step, setStep] = useState(1);
@@ -316,7 +351,7 @@ export function BookingModal() {
                             value={formResponses[fieldName] || ""}
                             onChange={(e) => setFormResponses((prev) => ({ ...prev, [fieldName]: e.target.value }))}
                             rows={4}
-                            className="w-full border border-[color:var(--hairline-dark-strong)] rounded-md px-4 py-2.5 outline-none focus:border-[color:var(--ember)] focus:ring-1 focus:ring-[color:var(--ember)] transition-all resize-none bg-[color:var(--bone)]"
+                            className={`${BOOKING_INPUT_CLASS} resize-none`}
                           />
                         ) : field.type === "boolean" || field.type === "checkbox" ? (
                           <div className="flex items-center gap-3 mt-2">
@@ -358,20 +393,19 @@ export function BookingModal() {
                                 setFormResponses((prev) => ({ ...prev, [fieldName]: selected ? selected.value : "" }));
                               }
                             }}
-                            classNames={{
-                              control: () => "w-full border border-[color:var(--hairline-dark-strong)] rounded-md py-0.5 outline-none focus-within:border-[color:var(--ember)] focus-within:ring-1 focus-within:ring-[color:var(--ember)] transition-all bg-[color:var(--bone)] shadow-none",
-                            }}
-                            styles={{
-                              control: (base) => ({ ...base, border: "none", boxShadow: "none", backgroundColor: "transparent" }),
-                              menu: (base) => ({ ...base, zIndex: 100 })
-                            }}
+                            classNames={BOOKING_SELECT_CLASSNAMES}
+                            styles={BOOKING_SELECT_STYLES}
                           />
                         ) : field.type === "phone" ? (
                           <PhoneInput
+                            international
+                            defaultCountry="NL"
+                            countryCallingCodeEditable={false}
+                            required={isRequired}
                             placeholder={field.placeholder || "Enter phone number"}
                             value={formResponses[fieldName]}
                             onChange={(value) => setFormResponses((prev) => ({ ...prev, [fieldName]: value }))}
-                            className="w-full border border-[color:var(--hairline-dark-strong)] rounded-md px-4 py-2 outline-none focus-within:border-[color:var(--ember)] focus-within:ring-1 focus-within:ring-[color:var(--ember)] transition-all bg-[color:var(--bone)] [&_.PhoneInputInput]:bg-transparent [&_.PhoneInputInput]:border-none [&_.PhoneInputInput]:outline-none [&_.PhoneInputInput]:min-h-[26px]"
+                            className={`booking-phone-input ${BOOKING_COMPOSITE_INPUT_CLASS} [&_.PhoneInputInput]:bg-transparent [&_.PhoneInputInput]:border-none [&_.PhoneInputInput]:outline-none [&_.PhoneInputInput]:min-h-[26px]`}
                           />
                         ) : (
                           <input
@@ -380,7 +414,7 @@ export function BookingModal() {
                             type={field.type === "email" ? "email" : "text"}
                             value={formResponses[fieldName] || ""}
                             onChange={(e) => setFormResponses((prev) => ({ ...prev, [fieldName]: e.target.value }))}
-                            className="w-full border border-[color:var(--hairline-dark-strong)] rounded-md px-4 py-2.5 outline-none focus:border-[color:var(--ember)] focus:ring-1 focus:ring-[color:var(--ember)] transition-all bg-[color:var(--bone)]"
+                            className={BOOKING_INPUT_CLASS}
                           />
                         )}
                       </div>
@@ -395,7 +429,7 @@ export function BookingModal() {
                         type="text"
                         value={formResponses["name"] || ""}
                         onChange={(e) => setFormResponses((prev) => ({ ...prev, name: e.target.value }))}
-                        className="w-full border border-[color:var(--hairline-dark-strong)] rounded-md px-4 py-2.5 outline-none focus:border-[color:var(--ember)] focus:ring-1 focus:ring-[color:var(--ember)] transition-all bg-[color:var(--bone)]"
+                        className={BOOKING_INPUT_CLASS}
                         placeholder="Jane Doe"
                       />
                     </div>
@@ -406,7 +440,7 @@ export function BookingModal() {
                         type="email"
                         value={formResponses["email"] || ""}
                         onChange={(e) => setFormResponses((prev) => ({ ...prev, email: e.target.value }))}
-                        className="w-full border border-[color:var(--hairline-dark-strong)] rounded-md px-4 py-2.5 outline-none focus:border-[color:var(--ember)] focus:ring-1 focus:ring-[color:var(--ember)] transition-all bg-[color:var(--bone)]"
+                        className={BOOKING_INPUT_CLASS}
                         placeholder="jane@example.com"
                       />
                     </div>
@@ -416,7 +450,7 @@ export function BookingModal() {
                         value={formResponses["notes"] || ""}
                         onChange={(e) => setFormResponses((prev) => ({ ...prev, notes: e.target.value }))}
                         rows={4}
-                        className="w-full border border-[color:var(--hairline-dark-strong)] rounded-md px-4 py-2.5 outline-none focus:border-[color:var(--ember)] focus:ring-1 focus:ring-[color:var(--ember)] transition-all resize-none bg-[color:var(--bone)]"
+                        className={`${BOOKING_INPUT_CLASS} resize-none`}
                         placeholder="Please share anything that will help prepare for our meeting."
                       />
                     </div>

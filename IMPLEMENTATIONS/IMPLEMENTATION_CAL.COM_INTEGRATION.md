@@ -43,3 +43,23 @@ To achieve precise layout control (specifically, showing the Intro panel on the 
    - **Step 1 (Split-Screen):** Fetches and displays the Intro dynamically on the left. Renders a custom calendar (`react-day-picker`) and available time slots on the right.
    - **Step 2 (Focused Form):** Hides the Intro panel completely. Displays only the booking intake form (Name, Email, Notes).
    - **Step 3 (Confirmation):** Success screen displaying the confirmed time.
+
+## Part 3: Booking Form Field Styling & Phone Prefix
+
+### Goals
+- Unify all dynamic booking field styles with the standard STRIDE input pattern
+- Show visible country dial-code prefix (e.g. +355 for Albania, +31 default for Netherlands)
+
+### Changes
+1. Shared `BOOKING_INPUT_CLASS` and `BOOKING_COMPOSITE_INPUT_CLASS` constants in `BookingModal.tsx`
+2. PhoneInput: `international`, `defaultCountry="NL"`, `countryCallingCodeEditable={false}`
+3. CSS overrides for `react-phone-number-input` in `styles.css` (ember focus, height parity)
+4. Extended react-select theming (`BOOKING_SELECT_CLASSNAMES` / `BOOKING_SELECT_STYLES`) for select/multiselect/radio fields
+
+### Test Checklist
+- [ ] Open booking modal → pick date/time → step 2 form
+- [ ] All fields share consistent border, padding, background, focus ring
+- [ ] Phone defaults to Netherlands (+31); changing to Albania shows +355
+- [ ] User types only national digits after prefix
+- [ ] Select/multiselect dropdowns match input styling
+- [ ] Submit still succeeds with E.164 phone in Cal.com booking
