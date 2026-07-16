@@ -32,13 +32,44 @@ export const getCalEventDetails = createServerFn({ method: "GET" })
       throw new Error(`Event type ${data.eventTypeSlug} not found`);
     }
 
+    let bookingFields = match.bookingFields || match.customInputs || [];
+    
+    // Cal.com v2 API sometimes wraps standard fields inside a JSON string called `bookingField` with type "unknown".
+    bookingFields = bookingFields.map((field: any) => {
+      if (field.type === "unknown" && field.slug === "unknown" && typeof field.bookingField === "string") {
+        try {
+          const inner = JSON.parse(field.bookingField);
+          return {
+            ...field,
+            ...inner,
+            slug: inner.name || field.slug, // the inner object uses "name" instead of "slug"
+          };
+        } catch (e) {
+          return field;
+        }
+      }
+      return field;
+    });
+
+    // Enforce standard Cal.com field ordering: Name, Email, Phone should always be at the top.
+    const standardOrder = ["name", "email", "attendeePhoneNumber"];
+    bookingFields.sort((a: any, b: any) => {
+      const aIndex = standardOrder.indexOf(a.slug);
+      const bIndex = standardOrder.indexOf(b.slug);
+      
+      if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+      if (aIndex !== -1) return -1;
+      if (bIndex !== -1) return 1;
+      return 0;
+    });
+
     return {
       id: match.id,
       title: match.title,
       description: match.description,
       length: match.length || match.duration || 60,
       location: match.locations?.[0]?.address || "Video call",
-      bookingFields: match.bookingFields || match.customInputs || [],
+      bookingFields: bookingFields,
     };
   });
 
@@ -95,6 +126,7 @@ export const createCalBooking = createServerFn({ method: "POST" })
       start: string;
       name: string;
       email: string;
+      phoneNumber: string;
       notes?: string;
       responses?: Record<string, any>;
     }) => d
@@ -112,6 +144,7 @@ export const createCalBooking = createServerFn({ method: "POST" })
       attendee: {
         name: data.name,
         email: data.email,
+        phoneNumber: data.phoneNumber,
         timeZone: "Europe/Budapest",
         language: "en",
       },
@@ -120,6 +153,8 @@ export const createCalBooking = createServerFn({ method: "POST" })
         notes: data.notes,
       },
     };
+
+    console.log("PAYLOAD OUT:", JSON.stringify(payload, null, 2));
 
     const response = await fetch(`${CAL_API_URL}/bookings`, {
       method: "POST",

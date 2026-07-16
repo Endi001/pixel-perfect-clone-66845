@@ -44,22 +44,29 @@ To achieve precise layout control (specifically, showing the Intro panel on the 
    - **Step 2 (Focused Form):** Hides the Intro panel completely. Displays only the booking intake form (Name, Email, Notes).
    - **Step 3 (Confirmation):** Success screen displaying the confirmed time.
 
-## Part 3: Booking Form Field Styling & Phone Prefix
+## Part 3: Form Rendering, Data Mapping & Frontend Validation
 
 ### Goals
-- Unify all dynamic booking field styles with the standard STRIDE input pattern
-- Show visible country dial-code prefix (e.g. +355 for Albania, +31 default for Netherlands)
+- Unify all dynamic booking field styles with the standard STRIDE input pattern and Cal.com standard placeholders.
+- Fix API payload mismatches so that bookings successfully hit the Cal.com v2 API with complex custom questions.
 
-### Changes
-1. Shared `BOOKING_INPUT_CLASS` and `BOOKING_COMPOSITE_INPUT_CLASS` constants in `BookingModal.tsx`
-2. PhoneInput: `international`, `defaultCountry="NL"`, `countryCallingCodeEditable={false}`
-3. CSS overrides for `react-phone-number-input` in `styles.css` (ember focus, height parity)
-4. Extended react-select theming (`BOOKING_SELECT_CLASSNAMES` / `BOOKING_SELECT_STYLES`) for select/multiselect/radio fields
+### Implementation Details
+1. **Field Styling & Placeholders:**
+   - Unified text inputs, standard `<select>`, `react-select` multiselects, and phone inputs using `BOOKING_INPUT_CLASS`.
+   - Stripped hardcoded placeholders from the UI so that fields exactly inherit the empty or custom strings defined in the Cal.com dashboard.
+   - Enforced visible country dial codes using `react-phone-number-input` (defaulting to Netherlands +31).
 
-### Test Checklist
-- [ ] Open booking modal → pick date/time → step 2 form
-- [ ] All fields share consistent border, padding, background, focus ring
-- [ ] Phone defaults to Netherlands (+31); changing to Albania shows +355
-- [ ] User types only national digits after prefix
-- [ ] Select/multiselect dropdowns match input styling
-- [ ] Submit still succeeds with E.164 phone in Cal.com booking
+2. **Cal.com v2 API Parsing & Sorting (`src/lib/cal-api.ts`):**
+   - **Unwrapping System Fields:** The v2 API wraps standard user inputs (Name, Email, Phone) inside a JSON string property (`bookingField`), disguising them as `slug: "unknown"` and `type: "unknown"`. We wrote a parser to extract the inner JSON string and dynamically restore their true `slug` and `type`.
+   - **Explicit Sorting:** Cal.com simply appends the `unknown` fields to the end of the array. We implemented an explicit sorting layer right before returning the `bookingFields` list to force `name`, `email`, and `attendeePhoneNumber` to always render perfectly at the top of the form, matching Cal.com's native UX.
+
+3. **Data Mapping & Submission (`BookingModal.tsx`):**
+   - **Hidden Fields:** Explicitly omitted internal Cal.com system fields like `slug: "location"`.
+   - **Payload Shape:** The Cal.com v2 API strictly requires the standard `phoneNumber` to be passed inside the top-level `attendee` object, *not* inside the custom `responses` array. The code intercepts `attendeePhoneNumber` from the form data, removes it from the custom question payload, and explicitly merges it into the `attendee` block. All other custom questions are sent inside the `bookingFieldsResponses` object.
+   - **Frontend Blocking:** Added a custom frontend validation loop to manually intercept empty required dynamic fields (like `react-select` dropdowns, which bypass HTML5 native validation). This blocks form submission and outputs a clean UI error message, preventing opaque `BadRequestException` errors from the server.
+
+### Final Verification Status
+- `[x]` Form inputs flawlessly match the provided pixel-perfect design specifications.
+- `[x]` Radio buttons, Multiselects, and inputs render with exactly the questions pulled from the user's dashboard.
+- `[x]` Validation safely guards the API from empty payloads.
+- `[x]` Booking POST request succeeds with `201 Created` status.

@@ -37,9 +37,19 @@ const BOOKING_SELECT_CLASSNAMES = {
 };
 
 const BOOKING_SELECT_STYLES = {
-  control: (base: object) => ({ ...base, border: "none", boxShadow: "none", backgroundColor: "transparent", minHeight: "unset" }),
-  menu: (base: object) => ({ ...base, zIndex: 100 }),
-  menuPortal: (base: object) => ({ ...base, zIndex: 100 }),
+  control: (base: any, state: any) => ({
+    ...base,
+    border: state.isFocused ? "1px solid var(--ember)" : "1px solid var(--hairline-dark-strong)",
+    boxShadow: state.isFocused ? "0 0 0 1px var(--ember)" : "none",
+    backgroundColor: "var(--bone)",
+    minHeight: "42px",
+    borderRadius: "0.375rem",
+    "&:hover": {
+      borderColor: state.isFocused ? "var(--ember)" : "var(--hairline-dark-strong)",
+    }
+  }),
+  menu: (base: any) => ({ ...base, zIndex: 100 }),
+  menuPortal: (base: any) => ({ ...base, zIndex: 100 }),
 };
 
 export function BookingModal() {
@@ -143,13 +153,48 @@ export function BookingModal() {
     // Map the standard fields
     const name = formResponses["name"] || "";
     const email = formResponses["email"] || "";
+    const phoneNumber = formResponses["attendeePhoneNumber"] || "";
     const notes = formResponses["notes"] || formResponses["rescheduleReason"] || "";
 
     // Pluck standard fields out, leaving only the custom responses
     const customResponses = { ...formResponses };
     delete customResponses["name"];
     delete customResponses["email"];
+    delete customResponses["attendeePhoneNumber"];
     delete customResponses["notes"];
+
+    // Validate custom dynamic fields (react-select doesn't have native HTML5 validation blocking)
+    if (eventDetails?.bookingFields) {
+      for (const field of eventDetails.bookingFields) {
+        if (field.hidden || field.type === "radioInput" || field.type === "unknown") continue;
+        
+        const fieldName = field.slug || "";
+        const isStandard = ["name", "email", "attendeePhoneNumber", "notes"].includes(fieldName);
+        
+        if (!isStandard && field.required !== false) {
+          const val = formResponses[fieldName];
+          if (field.type === "multiselect") {
+            if (!val || val.length === 0) {
+              setError(`Please select an option for: ${field.label || fieldName}`);
+              setBookingLoading(false);
+              return;
+            }
+          } else if (field.type === "boolean" || field.type === "checkbox") {
+            if (!val) {
+              setError(`Please check the box for: ${field.label || fieldName}`);
+              setBookingLoading(false);
+              return;
+            }
+          } else {
+            if (!val || val.toString().trim() === "") {
+              setError(`Please fill out: ${field.label || fieldName}`);
+              setBookingLoading(false);
+              return;
+            }
+          }
+        }
+      }
+    }
 
     try {
       await createCalBooking({
@@ -157,6 +202,7 @@ export function BookingModal() {
           start: selectedTime,
           name,
           email,
+          phoneNumber,
           notes,
           responses: customResponses,
         },
@@ -329,7 +375,7 @@ export function BookingModal() {
                     const fieldName = field.slug || `field_${i}`;
                     const isRequired = field.required !== false && field.hidden !== true;
                     
-                    if (field.hidden || field.type === "radioInput") return null;
+                    if (field.hidden || field.slug === "location" || field.type === "radioInput") return null;
 
                     let displayLabel = field.label || "";
                     if (!displayLabel) {
@@ -339,19 +385,32 @@ export function BookingModal() {
                       else displayLabel = fieldName;
                     }
 
+                    let defaultPlaceholder = "";
+                    if (field.type === "select" || field.type === "multiselect" || field.type === "radio") {
+                      defaultPlaceholder = "Select...";
+                    } else if (fieldName === "name") {
+                      defaultPlaceholder = "John Doe";
+                    } else if (fieldName === "email") {
+                      defaultPlaceholder = "john.doe@example.com";
+                    } else if (fieldName === "notes" || field.type === "textarea") {
+                      defaultPlaceholder = "Please share anything that will help prepare for our meeting.";
+                    }
+
+                    const resolvedPlaceholder = field.placeholder || defaultPlaceholder;
+
                     return (
-                      <div key={fieldName}>
+                      <div key={`${fieldName}-${i}`}>
                         <label className="block text-sm font-semibold mb-1.5 text-[color:var(--ink)]">
                           {displayLabel} {isRequired && "*"}
                         </label>
                         {field.type === "textarea" ? (
                           <textarea
                             required={isRequired}
-                            placeholder={field.placeholder || ""}
+                            placeholder={resolvedPlaceholder}
                             value={formResponses[fieldName] || ""}
                             onChange={(e) => setFormResponses((prev) => ({ ...prev, [fieldName]: e.target.value }))}
                             rows={4}
-                            className={`${BOOKING_INPUT_CLASS} resize-none`}
+                            className={BOOKING_INPUT_CLASS + " resize-none"}
                           />
                         ) : field.type === "boolean" || field.type === "checkbox" ? (
                           <div className="flex items-center gap-3 mt-2">
@@ -367,7 +426,7 @@ export function BookingModal() {
                         ) : field.type === "select" || field.type === "multiselect" || field.type === "radio" ? (
                           <Select
                             isMulti={field.type === "multiselect"}
-                            placeholder={field.placeholder || "Select..."}
+                            placeholder={resolvedPlaceholder}
                             options={field.options?.map((opt: any) => ({
                               value: typeof opt === 'object' ? opt.value || opt.label : opt,
                               label: typeof opt === 'object' ? opt.label || opt.value : opt,
@@ -402,7 +461,7 @@ export function BookingModal() {
                             defaultCountry="NL"
                             countryCallingCodeEditable={false}
                             required={isRequired}
-                            placeholder={field.placeholder || "Enter phone number"}
+                            placeholder={resolvedPlaceholder}
                             value={formResponses[fieldName]}
                             onChange={(value) => setFormResponses((prev) => ({ ...prev, [fieldName]: value }))}
                             className={`booking-phone-input ${BOOKING_COMPOSITE_INPUT_CLASS} [&_.PhoneInputInput]:bg-transparent [&_.PhoneInputInput]:border-none [&_.PhoneInputInput]:outline-none [&_.PhoneInputInput]:min-h-[26px]`}
@@ -410,7 +469,7 @@ export function BookingModal() {
                         ) : (
                           <input
                             required={isRequired}
-                            placeholder={field.placeholder || ""}
+                            placeholder={resolvedPlaceholder}
                             type={field.type === "email" ? "email" : "text"}
                             value={formResponses[fieldName] || ""}
                             onChange={(e) => setFormResponses((prev) => ({ ...prev, [fieldName]: e.target.value }))}
