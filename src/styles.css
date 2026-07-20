@@ -74,8 +74,15 @@
 }
 
 @layer base {
-  * { border-color: var(--hairline-light); }
-  html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+  * {
+    border-color: var(--hairline-light);
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
   body {
     background-color: var(--bone);
     color: var(--text-on-light);
@@ -83,18 +90,71 @@
     font-weight: 400;
     font-feature-settings: "ss01", "cv11";
   }
-  h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 700; letter-spacing: -0.01em; line-height: 0.92; }
-  ::selection { background: var(--ember); color: var(--ember-foreground); }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 0.92;
+  }
+
+  ::selection {
+    background: var(--ember);
+    color: var(--ember-foreground);
+  }
+
   :focus-visible {
     outline: 2px solid var(--ember);
     outline-offset: 3px;
   }
+
+  /* Custom scrollbar — dark transparent thumb */
+  body {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: var(--radius);
+    transition: background 0.3s var(--ease-drive);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+  }
 }
 
 @layer utilities {
-  .font-display { font-family: var(--font-display); font-weight: 700; letter-spacing: -0.01em; }
-  .font-display-thin { font-family: var(--font-display); font-weight: 300; letter-spacing: -0.015em; }
-  .font-mono-tech { font-family: var(--font-mono); font-weight: 400; letter-spacing: 0.02em; }
+  .font-display {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .font-display-thin {
+    font-family: var(--font-display);
+    font-weight: 300;
+    letter-spacing: -0.015em;
+  }
+
+  .font-mono-tech {
+    font-family: var(--font-mono);
+    font-weight: 400;
+    letter-spacing: 0.02em;
+  }
+
   .eyebrow {
     font-family: var(--font-mono);
     font-size: 0.72rem;
@@ -102,9 +162,18 @@
     text-transform: uppercase;
     font-weight: 400;
   }
-  .measure-text { max-width: 42rem; }
-  .hairline { border-color: var(--hairline-light); }
-  .hairline-dark { border-color: var(--hairline-dark); }
+
+  .measure-text {
+    max-width: 42rem;
+  }
+
+  .hairline {
+    border-color: var(--hairline-light);
+  }
+
+  .hairline-dark {
+    border-color: var(--hairline-dark);
+  }
 
   .stride-section-dark {
     background: var(--ink);
@@ -112,6 +181,7 @@
     --border: var(--hairline-dark);
     border-color: var(--hairline-dark);
   }
+
   .stride-section-light {
     background: var(--bone);
     color: var(--text-on-light);
@@ -122,26 +192,55 @@
     -webkit-clip-path: inset(0 100% 0 0);
     clip-path: inset(0 100% 0 0);
   }
-  .no-scrollbar::-webkit-scrollbar { display: none; }
-  .no-scrollbar { scrollbar-width: none; }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
 }
 
 /* Scroll cue idle loop — Recovery-phase (2s) */
 @keyframes stride-scroll-cue {
-  0%, 100% { transform: translateY(0); opacity: 0.6; }
-  50% { transform: translateY(8px); opacity: 1; }
+
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.6;
+  }
+
+  50% {
+    transform: translateY(8px);
+    opacity: 1;
+  }
 }
-.stride-scroll-cue { animation: stride-scroll-cue 2s var(--ease-recovery) infinite; }
+
+.stride-scroll-cue {
+  animation: stride-scroll-cue 2s var(--ease-recovery) infinite;
+}
 
 /* Ember flash — Strike-phase */
 @keyframes stride-strike-flash {
-  0% { opacity: 0; }
-  40% { opacity: 1; }
-  100% { opacity: 0; }
+  0% {
+    opacity: 0;
+  }
+
+  40% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
@@ -173,4 +272,4 @@
 
 .booking-phone-input .PhoneInputCountrySelect:focus + .PhoneInputCountryIcon--border {
   box-shadow: 0 0 0 1px var(--ember), inset 0 0 0 1px var(--ember);
-}
+}
