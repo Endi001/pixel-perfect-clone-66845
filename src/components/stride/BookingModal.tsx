@@ -92,6 +92,14 @@ export function BookingModal() {
     const prev = document.activeElement as HTMLElement | null;
     closeRef.current?.focus();
     document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
+    // Intercept wheel/touch events so Lenis doesn't scroll the page behind the modal
+    const overlay = dialogRef.current?.closest('[data-booking-overlay]') as HTMLElement | null;
+    const stopWheel = (e: WheelEvent) => e.stopPropagation();
+    const stopTouch = (e: TouchEvent) => e.stopPropagation();
+    overlay?.addEventListener('wheel', stopWheel, { passive: false });
+    overlay?.addEventListener('touchmove', stopTouch, { passive: false });
 
     // Fetch Event Details
     if (!eventDetails) {
@@ -117,6 +125,9 @@ export function BookingModal() {
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+      overlay?.removeEventListener('wheel', stopWheel);
+      overlay?.removeEventListener('touchmove', stopTouch);
       prev?.focus?.();
     };
   }, [open, closeModal, eventDetails]);
@@ -218,6 +229,7 @@ export function BookingModal() {
 
   return (
     <div
+      data-booking-overlay
       aria-hidden={!open}
       className={[
         "fixed inset-0 z-[60] transition-opacity",
@@ -244,8 +256,7 @@ export function BookingModal() {
         ].join(" ")}
         style={{
           borderRadius: 8,
-          transform: open ? undefined : "scale(0.98) translate(-50%, -50%)", // translate is needed because of md:-translate-x-1/2
-          transformOrigin: "center center",
+          scale: open ? undefined : "0.98",
         }}
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-[color:var(--hairline-light)] shrink-0">
@@ -266,7 +277,7 @@ export function BookingModal() {
           </button>
         </div>
 
-        <div className="relative flex-1 overflow-y-auto overflow-x-hidden bg-[color:var(--bone)]">
+        <div className="relative flex-1 overflow-y-auto overflow-x-hidden bg-[color:var(--bone)] overscroll-contain">
           {step === 1 && (
             <div className="flex flex-col md:flex-row h-full min-h-[500px]">
               {/* Left Panel: Intro */}
@@ -307,20 +318,22 @@ export function BookingModal() {
               {/* Right Panel: Calendar & Time */}
               <div className="p-8 flex-1 flex flex-col items-center">
                 <h3 className="font-display text-xl mb-6 w-full text-left">Select a Date & Time</h3>
-                <div className="w-full flex justify-center mb-8 border border-[color:var(--hairline-light)] p-4 rounded-xl bg-white shadow-sm">
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={(date) => {
-                      setSelectedDate(date);
-                      setSelectedTime(null);
-                    }}
-                    disabled={(date) => date < startOfDay(new Date())}
-                    className="rounded-md"
-                  />
-                </div>
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(date) => {
+                    setSelectedDate(date);
+                    setSelectedTime(null);
+                  }}
+                  disabled={(date) => date < startOfDay(new Date())}
+                  className="w-full mb-8 rounded-md max-w-[90%] mx-auto [--cell-size:2rem]"
+                  classNames={{
+                    root: "w-full",
+                    day: "flex-1",
+                  }}
+                />
 
-                <div className="w-full mb-8">
+                <div className="w-full mb-8 max-w-[90%] mx-auto">
                   <div className="font-medium mb-4 text-sm text-[color:var(--muted-on-light)] uppercase tracking-wider">
                     Available times for {selectedDate ? format(selectedDate, "MMM d, yyyy") : ""}
                   </div>

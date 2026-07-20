@@ -23,6 +23,9 @@ export function useLenis() {
         smoothWheel: true,
       });
 
+      // Expose globally so modals can call stop/start
+      (window as any).__lenis = lenis;
+
       lenis.on("scroll", ScrollTrigger.update);
       const raf = (time: number) => {
         lenis.raf(time * 1000);

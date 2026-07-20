@@ -70,3 +70,84 @@ To achieve precise layout control (specifically, showing the Intro panel on the 
 - `[x]` Radio buttons, Multiselects, and inputs render with exactly the questions pulled from the user's dashboard.
 - `[x]` Validation safely guards the API from empty payloads.
 - `[x]` Booking POST request succeeds with `201 Created` status.
+
+---
+
+## Part 4: Calendar Layout Expansion (Step 1 – Right Panel)
+
+### Problem
+In the booking modal's Step 1, the `<Calendar>` component is constrained inside a small white-bordered box that sits centred in the right panel with significant padding around it. It should expand to fill the available horizontal and vertical space of that panel section, making the calendar feel larger and more integrated with the layout.
+
+### Goal
+- Remove the fixed-size wrapper box (white shadow box with `border`, `p-4`, `rounded-xl`, `bg-white`, `shadow-sm`) that constrains the calendar.
+- Allow the `<Calendar>` component to stretch naturally to fill the right panel's full width.
+- Ensure the calendar day cells scale up proportionally (width & height) so that they fill the expanded space.
+- Maintain visual separation between the calendar and the time-slot list below it.
+
+### Implementation Checklist (`src/components/stride/BookingModal.tsx`)
+
+- `[x]` 1. **Remove the constraining wrapper `<div>`** — deleted the `<div>` that had `flex justify-center mb-8 border border-[…] p-4 rounded-xl bg-white shadow-sm`.
+- `[x]` 2. **Make the calendar full-width** — added `className="w-full mb-8"` directly on the `<Calendar>` component.
+- `[x]` 3. **Scale the calendar cells** — passed `classNames={{ root: "w-full", day: "flex-1" }}` so cells distribute evenly across the grid.
+- `[x]` 4. **Verify spacing** — the `mb-8` on the calendar provides adequate separation from the time-slot section below.
+- `[x]` 5. **Test responsiveness** — confirmed the expanded calendar does not overflow on mobile column layout.
+- `[x]` 6. **Visual QA** — calendar now covers the full width of the right panel with no large blank white borders.
+
+---
+
+## Part 5: Calendar Sizing, Scroll Containment & Modal Animation
+
+### 5A: Calendar Proportion Refinement
+
+#### Problem
+After expanding the calendar to full-width (Part 4), the grid felt oversized relative to the rest of the modal content.
+
+#### Solution
+- Reduced `--cell-size` from `2.5rem` to `2rem` so navigation buttons and caption scale down proportionally.
+- Wrapped both the `<Calendar>` and the time-slots section in `max-w-[90%] mx-auto` to give breathing room from the panel edges while keeping them visually aligned.
+
+#### Checklist
+- `[x]` 1. Set `[--cell-size:2rem]` on the Calendar className.
+- `[x]` 2. Add `max-w-[90%] mx-auto` to the Calendar.
+- `[x]` 3. Add `max-w-[90%] mx-auto` to the time-slots container so both sections align.
+
+---
+
+### 5B: Modal Scroll Containment
+
+#### Problem
+When the modal was open, scrolling (mouse wheel / touch) leaked through to the page behind it, scrolling the main content instead of the modal body. This happened because **Lenis** (smooth scroll library) intercepts all wheel/touch events at the document level, bypassing the browser's native `overflow: hidden`.
+
+#### Solution
+- Added `data-booking-overlay` attribute to the modal's outer overlay `<div>`.
+- On modal open, attached `wheel` and `touchmove` event listeners to the overlay with `stopPropagation()`. This prevents events from reaching Lenis's document-level listener.
+- Added `overscroll-contain` (CSS `overscroll-behavior: contain`) on the modal's scrollable content `<div>` to prevent scroll chaining at the CSS level.
+- Kept `overflow: hidden` on both `<body>` and `<html>` as a fallback for non-Lenis scroll.
+- Exposed the Lenis instance on `window.__lenis` in `use-lenis.ts` for potential future use.
+
+#### Checklist
+- `[x]` 1. Add `data-booking-overlay` to the outer overlay div.
+- `[x]` 2. Attach `wheel`/`touchmove` `stopPropagation` listeners on modal open.
+- `[x]` 3. Remove event listeners on modal close (cleanup).
+- `[x]` 4. Add `overscroll-contain` to the scrollable content div.
+- `[x]` 5. Set `overflow: hidden` on both `document.body` and `document.documentElement`.
+- `[x]` 6. Expose Lenis instance globally in `use-lenis.ts`.
+
+---
+
+### 5C: Modal Close Animation Fix
+
+#### Problem
+When the modal closed, it appeared to fade/drift towards the upper-left instead of fading in place. This was caused by a conflict between **Tailwind v4's individual transform properties** and the inline `transform` style:
+- Tailwind v4 sets `translate: -50% -50%` via the `md:-translate-x-1/2 md:-translate-y-1/2` classes (using the individual CSS `translate` property).
+- The close state used an inline `transform: scale(0.98) translate(-50%, -50%)` — the combined `transform` property.
+- Both applied simultaneously, effectively doubling the translation offset.
+
+#### Solution
+- Replaced the inline `transform` with the individual CSS `scale` property: `scale: open ? undefined : "0.98"`.
+- This no longer conflicts with Tailwind's separate `translate` property, so the modal scales down in place, perfectly centred.
+
+#### Checklist
+- `[x]` 1. Remove inline `transform` and `transformOrigin` from the dialog style.
+- `[x]` 2. Use individual `scale` CSS property instead.
+- `[x]` 3. Verify modal fades/scales in place without drifting.
