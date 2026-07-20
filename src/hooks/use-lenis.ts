@@ -1,9 +1,11 @@
 import { useLayoutEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useRouter } from "@tanstack/react-router";
 
 gsap.registerPlugin(ScrollTrigger);
 export function useLenis() {
+  const router = useRouter();
   useLayoutEffect(() => {
     if (typeof window === "undefined") return;
     const prefersReduced =
@@ -12,6 +14,7 @@ export function useLenis() {
 
     let cleanup: (() => void) | undefined;
     let cancelled = false;
+    let lenisInstance: any;
 
     (async () => {
       const Lenis = (await import("lenis")).default;
@@ -22,6 +25,7 @@ export function useLenis() {
         easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
         smoothWheel: true,
       });
+      lenisInstance = lenis;
 
       // Expose globally so modals can call stop/start
       (window as any).__lenis = lenis;
@@ -46,7 +50,14 @@ export function useLenis() {
       });
       resizeObserver.observe(document.body);
 
+      // Reset scroll position on navigation
+      const unsubscribe = router.subscribe('onResolved', () => {
+        // Ensure Lenis scrolls instantly to top after navigation
+        lenisInstance?.scrollTo(0, { immediate: true });
+      });
+
       cleanup = () => {
+        unsubscribe();
         resizeObserver.disconnect();
         gsap.ticker.remove(raf);
         lenis.destroy();
