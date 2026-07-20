@@ -142,7 +142,8 @@ export function BookingModal() {
 
       getCalSlots({ data: { start, end, eventTypeId: eventDetails.id } })
         .then((res) => {
-          setSlots(res || []);
+          const sorted = (res || []).sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
+          setSlots(sorted);
         })
         .catch((err) => {
           console.error(err);
@@ -360,7 +361,12 @@ export function BookingModal() {
                   )}
                 </div>
 
-                {error && <div className="text-red-500 mb-4 text-sm bg-red-50 p-3 rounded">{error}</div>}
+                {error && (
+        <div className="text-red-500 mb-4 text-sm bg-red-50 p-3 rounded flex items-center justify-between">
+          <span>{error}</span>
+          <button onClick={() => setStep(1)} className="ml-2 text-sm underline">Retry</button>
+        </div>
+      )}
 
                 <div className="mt-auto w-full pt-4 border-t border-[color:var(--hairline-light)]">
                   <button

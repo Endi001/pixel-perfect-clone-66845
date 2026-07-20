@@ -87,7 +87,8 @@ export const getCalSlots = createServerFn({ method: "GET" })
     url.searchParams.append("startTime", start);
     url.searchParams.append("endTime", end);
 
-    const response = await fetch(url.toString(), {
+    console.log('Fetching slots URL:', url.toString());
+const response = await fetch(url.toString(), {
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "cal-api-version": "2024-08-13",
