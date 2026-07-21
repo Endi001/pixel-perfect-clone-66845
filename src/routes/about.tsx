@@ -4,11 +4,15 @@ import { clinic } from "@/lib/stride-media";
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
-      { title: "About — STRIDE Physiotherapy" },
-      { name: "description", content: "The team, the clinic, and the belief that the body isn't fragile — it's undertrained for what happened to it." },
-      { property: "og:title", content: "About — STRIDE Physiotherapy" },
-      { property: "og:description", content: "The team, the clinic, the working belief behind STRIDE." },
+      { title: "About Us — STRIDE Physiotherapy Clinic Ashfield Quay" },
+      { name: "description", content: "Meet the specialist team behind STRIDE Physiotherapy in Ashfield Quay. We believe the body isn't fragile — it's undertrained for what happened to it." },
+      { property: "og:title", content: "About STRIDE Physiotherapy — The Clinic & Team" },
+      { property: "og:description", content: "Meet our physiotherapists and learn our evidence-based treatment methodology in Ashfield Quay." },
+      { property: "og:url", content: "https://stridephysio.ie/about" },
+      { name: "twitter:title", content: "About Us — STRIDE Physiotherapy" },
+      { name: "twitter:description", content: "Meet our physiotherapists and learn our evidence-based treatment methodology in Ashfield Quay." },
     ],
+    links: [{ rel: "canonical", href: "https://stridephysio.ie/about" }],
   }),
   component: AboutPage,
 });

@@ -4,11 +4,15 @@ import { clinic } from "@/lib/stride-media";
 export const Route = createFileRoute("/treatments")({
   head: () => ({
     meta: [
-      { title: "Treatments — STRIDE Physiotherapy" },
-      { name: "description", content: "Back, neck, joint and muscle pain, post-op rehab, injury recovery, mobility, chronic pain, sports injuries and manual therapy." },
-      { property: "og:title", content: "Treatments — STRIDE Physiotherapy" },
-      { property: "og:description", content: "Every area we treat, from back pain to post-op rehabilitation." },
+      { title: "Physiotherapy Treatments & Services — STRIDE Ashfield Quay" },
+      { name: "description", content: "Comprehensive physiotherapy treatments: back pain, joint mobility, sports injuries, post-op rehab, chronic pain, and manual physical therapy in Ashfield Quay." },
+      { property: "og:title", content: "Physiotherapy Treatments — STRIDE Ashfield Quay" },
+      { property: "og:description", content: "Targeted physical therapy treatments for back pain, joint mobility, post-op recovery, and athletic injuries." },
+      { property: "og:url", content: "https://stridephysio.ie/treatments" },
+      { name: "twitter:title", content: "Physiotherapy Treatments — STRIDE Ashfield Quay" },
+      { name: "twitter:description", content: "Targeted physical therapy treatments for back pain, joint mobility, post-op recovery, and athletic injuries." },
     ],
+    links: [{ rel: "canonical", href: "https://stridephysio.ie/treatments" }],
   }),
   component: TreatmentsPage,
 });

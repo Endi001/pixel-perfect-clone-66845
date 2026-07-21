@@ -4,11 +4,15 @@ import { clinic } from "@/lib/stride-media";
 export const Route = createFileRoute("/our-approach")({
   head: () => ({
     meta: [
-      { title: "Our approach — STRIDE Physiotherapy" },
-      { name: "description", content: "The four-beat method — assess, treat, rebuild, return — explained. Measured, loaded, honest rehabilitation." },
-      { property: "og:title", content: "Our approach — STRIDE Physiotherapy" },
-      { property: "og:description", content: "Assess. Treat. Rebuild. Return. The clinical method behind STRIDE." },
+      { title: "Our Clinical Methodology — STRIDE Physiotherapy" },
+      { name: "description", content: "Discover the four-stage clinical methodology at STRIDE: Assess, Treat, Rebuild, Return. Evidence-backed, progressive loading and personalized rehabilitation." },
+      { property: "og:title", content: "Our Clinical Approach — STRIDE Physiotherapy" },
+      { property: "og:description", content: "Assess. Treat. Rebuild. Return. The evidence-backed clinical system behind STRIDE." },
+      { property: "og:url", content: "https://stridephysio.ie/our-approach" },
+      { name: "twitter:title", content: "Our Clinical Approach — STRIDE Physiotherapy" },
+      { name: "twitter:description", content: "Assess. Treat. Rebuild. Return. The evidence-backed clinical system behind STRIDE." },
     ],
+    links: [{ rel: "canonical", href: "https://stridephysio.ie/our-approach" }],
   }),
   component: OurApproachPage,
 });

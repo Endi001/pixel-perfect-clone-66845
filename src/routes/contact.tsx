@@ -5,11 +5,15 @@ import { useBooking } from "@/components/stride/booking-context";
 export const Route = createFileRoute("/contact")({
   head: () => ({
     meta: [
-      { title: "Contact & book — STRIDE Physiotherapy" },
-      { name: "description", content: "Book an assessment at STRIDE Physiotherapy, Ashfield Quay. Address, hours, phone and email." },
-      { property: "og:title", content: "Contact — STRIDE Physiotherapy" },
-      { property: "og:description", content: "Address, hours and booking for STRIDE Physiotherapy." },
+      { title: "Contact & Book Assessment — STRIDE Physiotherapy Ashfield Quay" },
+      { name: "description", content: "Book an initial physiotherapy assessment at STRIDE in Ashfield Quay. Check clinic address, opening hours, phone number, and accepted insurance plans." },
+      { property: "og:title", content: "Contact & Book Assessment — STRIDE Physiotherapy" },
+      { property: "og:description", content: "Address, clinic opening hours, direct booking, and location map for STRIDE Physiotherapy in Ashfield Quay." },
+      { property: "og:url", content: "https://stridephysio.ie/contact" },
+      { name: "twitter:title", content: "Contact & Book — STRIDE Physiotherapy" },
+      { name: "twitter:description", content: "Address, clinic opening hours, direct booking, and location map for STRIDE Physiotherapy in Ashfield Quay." },
     ],
+    links: [{ rel: "canonical", href: "https://stridephysio.ie/contact" }],
   }),
   component: ContactPage,
 });

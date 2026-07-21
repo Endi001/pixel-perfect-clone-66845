@@ -77,11 +77,44 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   );
 }
 
+const jsonLdClinic = {
+  "@context": "https://schema.org",
+  "@type": ["MedicalClinic", "Physiotherapy"],
+  "name": "STRIDE Physiotherapy",
+  "image": "https://stridephysio.ie/og-image.png",
+  "url": "https://stridephysio.ie",
+  "telephone": "+353 1 555 0192",
+  "email": "hello@stridephysio.ie",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "14 Ashfield Quay",
+    "addressLocality": "Dublin",
+    "addressCountry": "IE"
+  },
+  "description": "STRIDE is a physiotherapy clinic in Ashfield Quay treating pain, injury and mobility problems. Assess, treat, rebuild, return.",
+  "openingHoursSpecification": [
+    {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+      "opens": "07:00",
+      "closes": "20:00"
+    },
+    {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": "Saturday",
+      "opens": "08:00",
+      "closes": "16:00"
+    }
+  ],
+  "medicalSpecialty": "Physiotherapy",
+  "priceRange": "$$"
+};
+
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, maximum-scale=5" },
       { title: "STRIDE Physiotherapy — Momentum is built, not born." },
       {
         name: "description",
@@ -89,6 +122,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "STRIDE is a physiotherapy clinic in Ashfield Quay treating pain, injury and mobility problems. We rebuild movement — assess, treat, rebuild, return.",
       },
       { name: "author", content: "STRIDE Physiotherapy" },
+      {
+        name: "keywords",
+        content:
+          "physiotherapy, physio, Ashfield Quay, Dublin physio, sports injury, back pain, rehabilitation, physical therapy, joint pain",
+      },
+      { name: "theme-color", content: "#0c0c0d" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      { name: "apple-mobile-web-app-title", content: "STRIDE" },
+
+      // Open Graph Metadata
+      { property: "og:site_name", content: "STRIDE Physiotherapy" },
       { property: "og:title", content: "STRIDE Physiotherapy — Momentum is built, not born." },
       {
         property: "og:description",
@@ -96,15 +141,41 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "Physiotherapy in Ashfield Quay. We treat pain, rebuild movement, and get you back to full speed.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://stridephysio.ie" },
+      { property: "og:image", content: "/og-image.png" },
+      { property: "og:image:secure_url", content: "/og-image.png" },
+      { property: "og:image:type", content: "image/png" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      {
+        property: "og:image:alt",
+        content:
+          "STRIDE Physiotherapy Clinic website snapshot preview showing high-performance physical therapy in Ashfield Quay.",
+      },
+      { property: "og:locale", content: "en_IE" },
+
+      // Twitter / X Metadata
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "STRIDE Physiotherapy — Momentum is built, not born." },
+      {
+        name: "twitter:description",
+        content:
+          "Physiotherapy in Ashfield Quay. We treat pain, rebuild movement, and get you back to full speed.",
+      },
+      { name: "twitter:image", content: "/og-image.png" },
+      {
+        name: "twitter:image:alt",
+        content: "STRIDE Physiotherapy website snapshot preview",
+      },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "icon", href: "/stride.png", type: "image/png" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
+      { rel: "canonical", href: "https://stridephysio.ie" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "" },
       { rel: "preconnect", href: "https://api.fontshare.com" },
-      { property: "og:image", content: "/stride.png" },
       {
         rel: "preload",
         as: "style",
@@ -122,6 +193,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         rel: "stylesheet",
         href: "https://api.fontshare.com/v2/css?f[]=general-sans@400,500&display=swap",
+      },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify(jsonLdClinic),
       },
     ],
   }),
