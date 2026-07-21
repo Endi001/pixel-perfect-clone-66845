@@ -8,6 +8,7 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -22,9 +23,7 @@ function NotFoundComponent() {
     <div className="stride-section-dark min-h-screen flex items-center justify-center px-4">
       <div className="max-w-md text-center">
         <div className="eyebrow text-[color:var(--muted-on-dark)]">404</div>
-        <h1 className="mt-4 font-display text-[clamp(3rem,10vw,7rem)] leading-[0.9]">
-          Off route.
-        </h1>
+        <h1 className="mt-4 font-display text-[clamp(3rem,10vw,7rem)] leading-[0.9]">Off route.</h1>
         <p className="mt-4 text-sm text-[color:var(--muted-on-dark)]">
           The page you're looking for doesn't exist or has been moved.
         </p>
@@ -58,7 +57,10 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
         </h1>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <button
-            onClick={() => { router.invalidate(); reset(); }}
+            onClick={() => {
+              router.invalidate();
+              reset();
+            }}
             className="bg-[color:var(--ember)] px-5 py-3 text-sm font-medium text-[color:var(--ember-foreground)]"
             style={{ borderRadius: 3 }}
           >
@@ -140,6 +142,7 @@ function RootShell({ children }: { children: ReactNode }) {
       <body>
         {children}
         <Scripts />
+        <SpeedInsights />
       </body>
     </html>
   );
